@@ -1319,12 +1319,15 @@ function drawPieTx() {
 // ─── GOOGLE SHEETS — CONFIGURACIÓN ───────────────────────────────────────────
 // 1. Implementa el Apps Script en tu Google Sheet
 // 2. Pega aquí la URL que obtengas:
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxqvFUlWa8gWl9MF1DYdBgqWXAIZKWRtFFPMCsJt8w68apd2j6vFiiOv2A-uPcHcGCwaQ/exec';   // ej: 'https://script.google.com/macros/s/XXXXX/exec'
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz6IZYMSi5XjAPmRYGovoAmkCZihMOz8DVG1XnkAMVBgr-jOAchVOZaQTVMAoOzm04bsQ/exec';   // ej: 'https://script.google.com/macros/s/XXXXX/exec'
 
-async function sendToSheets(patientData, isUpdate = false) {
+async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
   if (!SHEETS_URL) return;
   try {
-    const payload = { ...patientData, _action: isUpdate ? 'update' : 'insert' };
+    let action = 'insert';
+    if (isDelete) action = 'delete';
+    else if (isUpdate) action = 'update';
+    const payload = { ...patientData, _action: action };
     await fetch(SHEETS_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -1453,9 +1456,12 @@ function renderTable() {
 // ─── ELIMINAR / LIMPIAR ───────────────────────────────────────────────────────
 function delPat(i) {
   if (!confirm(`¿Eliminar paciente #${patients[i]['Nº Paciente']}?`)) return;
+  const deleted = patients[i];
   patients.splice(i,1);
   sortAndRenumber();
   localStorage.setItem('txp_v3', JSON.stringify(patients));
+  // Notifica a Google Sheets para borrar la fila
+  sendToSheets(deleted, false, true);
   updateUI(patients[patients.length-1]||null);
   showToast('Paciente eliminado','tinf');
 }
