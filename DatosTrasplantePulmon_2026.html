@@ -824,6 +824,7 @@ input::placeholder { color: var(--text3); }
       <div style="font-family:var(--mono);font-size:0.78rem;color:var(--accent)"><span id="tbl-n">0</span> pacientes registrados</div>
       <div style="display:flex;gap:0.5rem">
         <button class="btn btn-ghost" onclick="reordenarManual()">↕ Reordenar por fecha Tx</button>
+        <button class="btn btn-ghost" onclick="sincronizarTodos()" style="border-color:var(--accent);color:var(--accent)">☁ Sincronizar todos con Sheets</button>
         <button class="btn btn-danger" onclick="clearAll()">🗑 Borrar todos</button>
         <button class="btn btn-success" onclick="exportExcel()">⬇ Exportar Excel (.xlsx)</button>
       </div>
@@ -1333,31 +1334,59 @@ function drawPieTx() {
 // ─── GOOGLE SHEETS — CONFIGURACIÓN ───────────────────────────────────────────
 // 1. Implementa el Apps Script en tu Google Sheet
 // 2. Pega aquí la URL que obtengas:
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzs_7lFe2jsh_-7w6OgomGOJK5MuXAsS5C2q4ShM5EgsxlJYkwMlUQW9EY6HaDtyq-l1Q/exec';   // ej: 'https://script.google.com/macros/s/XXXXX/exec'
+const SHEETS_URL = '';   // ej: 'https://script.google.com/macros/s/XXXXX/exec'
 
 async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
   if (!SHEETS_URL) return;
-  try {
-    let action = 'insert';
-    if (isDelete) action = 'delete';
-    else if (isUpdate) action = 'update';
 
-    // Enviar datos en el orden exacto de COLS_BD (Nº Paciente primero)
-    const ordered = {};
-    COLS_BD.forEach(col => {
-      ordered[col] = patientData[col] !== undefined ? patientData[col] : '';
-    });
-    ordered._action = action;
+  let action = 'insert';
+  if (isDelete) action = 'delete';
+  else if (isUpdate) action = 'update';
 
-    await fetch(SHEETS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ordered)
-    });
-  } catch(err) {
-    console.warn('Google Sheets sync error:', err);
+  // Enviar datos en el orden exacto de COLS_BD (Nº Paciente primero)
+  const ordered = {};
+  COLS_BD.forEach(col => {
+    ordered[col] = (patientData[col] !== undefined && patientData[col] !== null)
+      ? patientData[col] : '';
+  });
+  ordered._action = action;
+
+  // Intentar hasta 3 veces si falla
+  for (let intento = 1; intento <= 3; intento++) {
+    try {
+      await fetch(SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ordered)
+      });
+      return; // éxito
+    } catch(err) {
+      console.warn(`Sheets sync intento ${intento}/3:`, err);
+      if (intento < 3) await new Promise(r => setTimeout(r, 1000 * intento));
+    }
   }
+  showToast('⚠ No se pudo sincronizar con Sheets — datos guardados localmente','tinf');
+}
+
+// ─── SINCRONIZAR TODOS CON SHEETS ────────────────────────────────────────────
+async function sincronizarTodos() {
+  if (!SHEETS_URL) { showToast('⚠ SHEETS_URL no configurada','terr'); return; }
+  if (!patients.length) { showToast('⚠ No hay pacientes','terr'); return; }
+  if (!confirm(`¿Sincronizar ${patients.length} pacientes con Google Sheets?\n\nAsegúrate de que la hoja solo tiene las 3 filas de cabecera (título, secciones, columnas) y ningún dato antes de continuar.`)) return;
+
+  showToast(`⏳ Sincronizando ${patients.length} pacientes…`,'tinf');
+  let ok = 0, err = 0;
+  for (let i = 0; i < patients.length; i++) {
+    try {
+      await sendToSheets(patients[i], false, false);
+      ok++;
+      await new Promise(r => setTimeout(r, 400));
+    } catch(e) { err++; }
+  }
+  showToast(err === 0
+    ? `✓ ${ok} pacientes sincronizados correctamente`
+    : `⚠ ${ok} OK · ${err} con error`, err === 0 ? 'tok' : 'terr');
 }
 
 function sortAndRenumber() {
