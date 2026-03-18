@@ -1341,12 +1341,19 @@ async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
     let action = 'insert';
     if (isDelete) action = 'delete';
     else if (isUpdate) action = 'update';
-    const payload = { ...patientData, _action: action };
+
+    // Enviar datos en el orden exacto de COLS_BD (Nº Paciente primero)
+    const ordered = {};
+    COLS_BD.forEach(col => {
+      ordered[col] = patientData[col] !== undefined ? patientData[col] : '';
+    });
+    ordered._action = action;
+
     await fetch(SHEETS_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(ordered)
     });
   } catch(err) {
     console.warn('Google Sheets sync error:', err);
