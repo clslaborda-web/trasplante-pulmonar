@@ -1180,6 +1180,7 @@ function editPat(i) {
     calcDPI(t);
   });
   syncECMOpostToSel();
+  initDpiToggles();
 
   // Complicaciones
   scb('ReIQxsangrado', p['Reintervención quirúrgica']); toggleReinterv();
@@ -1247,7 +1248,20 @@ function cancelEdit() {
 }
 
 
-// ─── GRÁFICO QUESITO TIPO TRASPLANTE ──────────────────────────────────────────
+// ─── DPI TOGGLE TEXT (No ↔ Sí) ───────────────────────────────────────────────
+function initDpiToggles() {
+  document.querySelectorAll('.dpi-toggle input[type=checkbox]').forEach(cb => {
+    // Set initial text
+    const span = cb.nextElementSibling;
+    if (span) span.textContent = cb.checked ? 'Sí' : 'No';
+    // Update on change
+    cb.addEventListener('change', () => {
+      if (span) span.textContent = cb.checked ? 'Sí' : 'No';
+    });
+  });
+}
+
+
 function drawPieTx() {
   const canvas = document.getElementById('pie-tx');
   if (!canvas) return;
@@ -1319,7 +1333,7 @@ function drawPieTx() {
 // ─── GOOGLE SHEETS — CONFIGURACIÓN ───────────────────────────────────────────
 // 1. Implementa el Apps Script en tu Google Sheet
 // 2. Pega aquí la URL que obtengas:
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbz6IZYMSi5XjAPmRYGovoAmkCZihMOz8DVG1XnkAMVBgr-jOAchVOZaQTVMAoOzm04bsQ/exec';   // ej: 'https://script.google.com/macros/s/XXXXX/exec'
+const SHEETS_URL = '';   // ej: 'https://script.google.com/macros/s/XXXXX/exec'
 
 async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
   if (!SHEETS_URL) return;
@@ -1507,6 +1521,7 @@ function clearForm() {
   toggleGradoRC();
   toggleTtoRH();
   toggleHiperSens();
+  initDpiToggles();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1859,6 +1874,7 @@ function toggleHiperSens() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.getElementById('styr').textContent = new Date().getFullYear();
 updateUI(patients.length ? patients[patients.length-1] : null);
+initDpiToggles();
 
 // Sheets status indicator
 (function() {
