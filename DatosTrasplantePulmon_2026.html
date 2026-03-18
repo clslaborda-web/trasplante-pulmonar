@@ -85,6 +85,14 @@ header {
 .pac-del { font-size: 0.72rem; color: var(--text3); padding: 2px 4px; border-radius: 3px; cursor: pointer; }
 .pac-del:hover { color: var(--red); background: var(--red-dim); }
 
+.estado-btn { border:none; border-radius:20px; padding:0.3rem 0.8rem; font-size:0.72rem; font-weight:600; cursor:pointer; transition:all 0.15s; display:inline-flex; align-items:center; gap:0.3rem; }
+.estado-incompleto { background:rgba(255,176,0,0.15); color:#FFB020; border:1px solid #FFB020; }
+.estado-completo   { background:rgba(0,200,150,0.15); color:#00C896; border:1px solid #00C896; }
+.estado-dot { width:7px; height:7px; border-radius:50%; display:inline-block; }
+.estado-incompleto .estado-dot { background:#FFB020; }
+.estado-completo   .estado-dot { background:#00C896; }
+
+
 /* MAIN */
 .main { padding: 1.5rem; overflow-y: auto; }
 .view-tabs { display: flex; margin-bottom: 1.4rem; border-bottom: 1px solid var(--border); }
@@ -809,7 +817,14 @@ input::placeholder { color: var(--text3); }
     </div>
 
     <div class="save-bar">
-      <div class="save-bar-txt"><span style="color:var(--text3);font-size:0.78rem">* campos obligatorios</span></div>
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <span style="color:var(--text3);font-size:0.78rem">* campos obligatorios</span>
+        <span style="color:var(--text3);font-size:0.78rem">|</span>
+        <span style="font-size:0.78rem;color:var(--text2)">Estado:</span>
+        <button class="estado-btn estado-incompleto" id="estado-btn" onclick="toggleEstado()">
+          <span class="estado-dot"></span> Incompleto
+        </button>
+      </div>
       <div style="display:flex;gap:0.5rem">
         <button class="btn btn-ghost" onclick="clearForm()">🗑 Limpiar</button>
         <button class="btn btn-primary btn-lg" id="save-btn" onclick="savePatient()">💾 Guardar paciente</button>
@@ -851,7 +866,7 @@ let editingId = null;  // _id del paciente en edición, null = nuevo paciente
 
 // Columnas en el mismo orden que la BD Excel v3 (121 cols)
 const COLS_BD = [
-  'Nº Paciente','Nombre','NHC','Edad (años)','Género',
+  'Nº Paciente','Estado','Nombre','NHC','Edad (años)','Género',
   'Fecha ingreso UCI','Fecha Trasplante','Fecha alta UCI',
   'Días UCI','Días de Trasplante','Fecha priorización','Días UCI pre-trasplante',
   'Fecha inicio VM','Fecha retirada VM','Días VM',
@@ -921,6 +936,7 @@ function collectForm() {
   const cb = f => document.querySelector(`label.ci[data-f="${f}"] input`)?.checked ? 'Sí' : 'No';
 
   // ── Datos generales ──
+  d['Estado']                      = document.getElementById('estado-btn')?.dataset.estado || 'Incompleto';
   d['Nombre']                     = gt('Nombre');
   d['NHC']                        = gt('NHC');
   d['Edad (años)']                = gn('Edad');
@@ -1119,6 +1135,7 @@ function editPat(i) {
   };
 
   // Datos generales
+  setEstadoBtn(p['Estado'] || 'Incompleto');
   sv('Nombre', p['Nombre']); sv('NHC', p['NHC']);
   sv('Edad', p['Edad (años)']); sv('Genero', p['Género']);
   sv('APACHEII', p['APACHE II']); sv('LAS', p['LAS']);
@@ -1334,7 +1351,7 @@ function drawPieTx() {
 // ─── GOOGLE SHEETS — CONFIGURACIÓN ───────────────────────────────────────────
 // 1. Implementa el Apps Script en tu Google Sheet
 // 2. Pega aquí la URL que obtengas:
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwy4aEyJoQBjQJSE-zoc7FTd0YXbxFrSJ3Fo81CuLxpRw1BWxQAL_4mmZmiAwGfb2fHWQ/exec';   // ej: 'https://script.google.com/macros/s/XXXXX/exec'
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxeNZsBZHcFfolXMLfH4wceyGQf-Nk63t3ikyxeY14SJLrG9FrUAAMYjIFejKnTQ37x2w/exec';   // ej: 'https://script.google.com/macros/s/XXXXX/exec'
 
 async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
   if (!SHEETS_URL) return;
@@ -1373,20 +1390,51 @@ async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
 async function sincronizarTodos() {
   if (!SHEETS_URL) { showToast('⚠ SHEETS_URL no configurada','terr'); return; }
   if (!patients.length) { showToast('⚠ No hay pacientes','terr'); return; }
-  if (!confirm(`¿Sincronizar ${patients.length} pacientes con Google Sheets?\n\nAsegúrate de que la hoja solo tiene las 3 filas de cabecera (título, secciones, columnas) y ningún dato antes de continuar.`)) return;
+  if (!confirm(`¿Sincronizar ${patients.length} pacientes con Google Sheets?\n\nEsto borrará los datos existentes en Sheets y los reemplazará con los ${patients.length} pacientes del formulario.`)) return;
 
-  showToast(`⏳ Sincronizando ${patients.length} pacientes…`,'tinf');
+  showToast(`⏳ Limpiando Sheets y sincronizando ${patients.length} pacientes…`,'tinf');
+
+  // Paso 1: enviar señal de borrado total
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({_action:'clear_all'})
+    });
+    await new Promise(r => setTimeout(r, 1000));
+  } catch(e) {}
+
+  // Paso 2: insertar todos en orden
   let ok = 0, err = 0;
   for (let i = 0; i < patients.length; i++) {
     try {
       await sendToSheets(patients[i], false, false);
       ok++;
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 500));
     } catch(e) { err++; }
   }
   showToast(err === 0
     ? `✓ ${ok} pacientes sincronizados correctamente`
     : `⚠ ${ok} OK · ${err} con error`, err === 0 ? 'tok' : 'terr');
+}
+
+// ─── ESTADO PACIENTE (semáforo completado) ────────────────────────────────────
+function toggleEstado() {
+  const btn = document.getElementById('estado-btn');
+  if (!btn) return;
+  const isCompleto = btn.dataset.estado === 'Completo';
+  btn.dataset.estado = isCompleto ? 'Incompleto' : 'Completo';
+  btn.className = 'estado-btn ' + (isCompleto ? 'estado-incompleto' : 'estado-completo');
+  btn.innerHTML = `<span class="estado-dot"></span> ${isCompleto ? 'Incompleto' : 'Completo'}`;
+}
+
+function setEstadoBtn(val) {
+  const btn = document.getElementById('estado-btn');
+  if (!btn) return;
+  const isCompleto = val === 'Completo';
+  btn.dataset.estado = isCompleto ? 'Completo' : 'Incompleto';
+  btn.className = 'estado-btn ' + (isCompleto ? 'estado-completo' : 'estado-incompleto');
+  btn.innerHTML = `<span class="estado-dot"></span> ${isCompleto ? 'Completo' : 'Incompleto'}`;
 }
 
 function sortAndRenumber() {
@@ -1465,7 +1513,7 @@ function updateUI(last) {
   } else {
     pl.innerHTML = patients.map((p,i)=>`
       <div class="pac-chip">
-        <div><div class="pac-num">#${p['Nº Paciente']}</div>
+        <div><div class="pac-num">#${p['Nº Paciente']} <span style="font-size:0.6rem;padding:1px 5px;border-radius:8px;${p['Estado']==='Completo'?'background:rgba(0,200,150,0.15);color:#00C896':'background:rgba(255,176,0,0.12);color:#FFB020'}">${p['Estado']==='Completo'?'✓':'⏳'}</span></div>
         <div class="pac-info">${p['Nombre']||'Sin nombre'} · ${p['NHC']||'—'}</div></div>
         <div style="display:flex;gap:3px">
           <span style="cursor:pointer;color:var(--accent);font-size:0.72rem;padding:2px 5px;border-radius:3px;background:var(--accent-glow)" onclick="editPat(${i})" title="Editar">✏</span>
@@ -1481,7 +1529,7 @@ function renderTable() {
   if (!patients.length) {
     wrap.innerHTML='<div class="empty"><div class="empty-ico">📋</div><div>Sin pacientes registrados</div></div>'; return;
   }
-  const PREV = ['Nº Paciente','Edad (años)','Género','Fecha Trasplante','APACHE II','LAS',
+  const PREV = ['Nº Paciente','Estado','Edad (años)','Género','Fecha Trasplante','APACHE II','LAS',
     'Enfermedad de base','Tipo Trasplante','T. Isquemia 1º (min)',
     'DPI 0h','DPI 24h','DPI 48h','DPI 72h','ECMO','Días VM','Días UCI','Alta UCI','Motivo éxitus'];
   const HDR = {'Nº Paciente':'Nº','Edad (años)':'Edad','Género':'Gén.','Fecha Trasplante':'Fecha Tx',
@@ -1504,16 +1552,36 @@ function renderTable() {
 }
 
 // ─── ELIMINAR / LIMPIAR ───────────────────────────────────────────────────────
-function delPat(i) {
+async function delPat(i) {
   if (!confirm(`¿Eliminar paciente #${patients[i]['Nº Paciente']}?`)) return;
   const deleted = patients[i];
   patients.splice(i,1);
   sortAndRenumber();
   localStorage.setItem('txp_v3', JSON.stringify(patients));
-  // Notifica a Google Sheets para borrar la fila
-  sendToSheets(deleted, false, true);
   updateUI(patients[patients.length-1]||null);
-  showToast('Paciente eliminado','tinf');
+  showToast('Paciente eliminado — actualizando Sheets…','tinf');
+
+  // Si hay URL de Sheets: borrar + reenviar todos para que los números queden correctos
+  if (SHEETS_URL && patients.length > 0) {
+    try {
+      await fetch(SHEETS_URL, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({_action:'clear_all'})
+      });
+      await new Promise(r => setTimeout(r, 800));
+      for (let p of patients) {
+        await sendToSheets(p, false, false);
+        await new Promise(r => setTimeout(r, 400));
+      }
+      showToast('✓ Sheets actualizado correctamente','tok');
+    } catch(e) {
+      showToast('⚠ Error al actualizar Sheets','terr');
+    }
+  } else if (SHEETS_URL) {
+    // Si no quedan pacientes, solo borramos
+    sendToSheets(deleted, false, true);
+  }
 }
 
 function clearAll() {
@@ -1547,6 +1615,7 @@ function clearForm() {
   document.getElementById('calc-ecmo-total').textContent='—';
   document.getElementById('calc-ecmo-pre').textContent='—';
   document.getElementById('calc-ecmo-post').textContent='—';
+  setEstadoBtn('Incompleto');
   document.getElementById('grp-Reinterv').style.display='none';
   document.getElementById('grp-MotivoExitusOtro').style.display='none';
   document.getElementById('grp-CompAbd').style.display='none';
