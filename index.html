@@ -1993,6 +1993,7 @@ initDpiToggles();
   } else {
     el.textContent = 'sin configurar';
   }
+})();
 // ─── IMPORTAR PACIENTES DESDE SHEETS ─────────────────────────────────────────
 // Descarga todos los pacientes de Sheets y los carga en el formulario
 // UPSERT por NHC: si el paciente ya existe lo actualiza, si no lo añade
@@ -2079,6 +2080,7 @@ async function importarDeSheets() {
       }
     }, 300);
   } catch(e) {}
+})();
 </script>
 </body>
 </html>
