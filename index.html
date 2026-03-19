@@ -2058,7 +2058,108 @@ async function importarDeSheets() {
 }
 
 
-// ─── GRÁFICO DONUT ────────────────────────────────────────────────────────────
+// ─── IMPRIMIR DESDE TABLA/SIDEBAR ────────────────────────────────────────────
+function imprimirFichaDirect(i) {
+  const p = patients[i];
+  if (!p) return;
+  _doImprimirFicha(p);
+}
+
+function imprimirFicha() {
+  const pb = document.getElementById('print-btn');
+  const patId = pb?.dataset.patId;
+  const p = patId ? patients.find(x => String(x._id) === patId) : null;
+  if (!p) { showToast('⚠ Abre un paciente para imprimir su ficha','terr'); return; }
+  _doImprimirFicha(p);
+}
+
+function _doImprimirFicha(p) {
+  const val = k => (p[k] !== undefined && p[k] !== '' && p[k] !== null) ? p[k] : '—';
+  const yn  = k => p[k] === 'Sí' ? '<span style="color:#00875A;font-weight:600">Sí</span>' : (p[k] || '—');
+  const sec = (title, color, rows) => `<div style="margin-bottom:0.5cm;break-inside:avoid">
+    <div style="background:${color};color:#fff;padding:3px 8px;font-size:7.5pt;font-weight:bold;text-transform:uppercase">${title}</div>
+    <table style="width:100%;border-collapse:collapse">${rows.map(([l,v],i) =>
+      `<tr style="background:${i%2===0?'#F4F7FA':'#fff'}"><td style="padding:2.5px 6px;color:#555;font-size:8.5pt;width:45%">${l}</td><td style="padding:2.5px 6px;color:#0D1F35;font-size:8.5pt">${v}</td></tr>`
+    ).join('')}</table></div>`;
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Ficha #${val('Nº Paciente')} — ${val('Nombre')}</title>
+<style>body{font-family:Arial,sans-serif;font-size:9pt;color:#1A1A2E;background:#fff}
+@page{margin:1.5cm;size:A4}@media print{.noprint{display:none}}</style></head><body>
+<div style="background:#0D1F35;color:#fff;padding:15px 20px;margin-bottom:0.4cm">
+  <div style="color:#00C8FF;font-size:9pt;text-transform:uppercase">Trasplante Pulmonar UCI · Vall d'Hebron</div>
+  <div style="font-size:16pt;font-weight:bold;margin-top:4px">Paciente #${val('Nº Paciente')} — ${val('Nombre')}</div>
+  <div style="font-size:8pt;color:rgba(255,255,255,0.6);margin-top:4px">NHC: ${val('NHC')} · Fecha Tx: ${val('Fecha Trasplante')} · ${val('Tipo Trasplante')} · Estado: ${val('Estado')}</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4cm">
+${sec('Datos Generales','#1E3A5F',[
+  ['Edad',val('Edad (años)')],['Género',val('Género')],
+  ['Enfermedad de base',val('Enfermedad de base')],
+  ['APACHE II',val('APACHE II')],['LAS',val('LAS')],
+  ['Retrasplante',yn('Retrasplante')],
+])}
+${sec('Estancia UCI','#943126',[
+  ['Fecha ingreso UCI',val('Fecha ingreso UCI')],
+  ['Fecha Trasplante',val('Fecha Trasplante')],
+  ['Fecha alta UCI',val('Fecha alta UCI')],
+  ['Días UCI',val('Días UCI')],
+  ['Días post-Tx',val('Días de Trasplante')],
+  ['Días VM',val('Días VM')],
+])}
+${sec('Cirugía','#117A65',[
+  ['Tipo Trasplante',val('Tipo Trasplante')],
+  ['CEC',val('CEC')],['T. CEC (min)',val('T. CEC (min)')],
+  ['Isquemia 1º (min)',val('T. Isquemia 1º (min)')],
+  ['Isquemia 2º (min)',val('T. Isquemia 2º (min)')],
+  ['Tórax abierto',yn('Tórax abierto al ingreso UCI')],
+])}
+${sec('DPI','#1A5276',[
+  ['DPI T0h',val('DPI 0h')],['PaFI T0h',val('PaFI 0h (mmHg)')],
+  ['DPI T72h',val('DPI 72h')],['PaFI T72h',val('PaFI 72h (mmHg)')],
+])}
+</div>
+<div class="noprint" style="text-align:center;padding:1cm;background:#f5f5f5;margin-top:0.5cm">
+  <button onclick="window.print()" style="background:#1A3C5E;color:#fff;border:none;border-radius:6px;padding:0.5rem 1.5rem;cursor:pointer">🖨 Imprimir / Guardar PDF</button>
+  <button onclick="window.close()" style="background:#eee;border:none;border-radius:6px;padding:0.5rem 1rem;cursor:pointer;margin-left:0.5rem">✕ Cerrar</button>
+</div>
+</body></html>`;
+
+  const win = window.open('','_blank','width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+}
+
+function initDpiToggles() {
+  document.querySelectorAll('.dpi-toggle input[type=checkbox]').forEach(cb => {
+    const span = cb.nextElementSibling;
+    if (span) span.textContent = cb.checked ? 'Sí' : 'No';
+    cb.addEventListener('change', () => {
+      if (span) span.textContent = cb.checked ? 'Sí' : 'No';
+    });
+  });
+}
+
+function renderPatList() {
+  const pl = document.getElementById('pat-list');
+  if (!pl) return;
+  if (!patients.length) {
+    pl.innerHTML = '<div style="color:var(--text3);font-size:0.78rem;padding:0.5rem">Sin pacientes</div>';
+  } else {
+    pl.innerHTML = patients.map((p,i) => `
+      <div class="pac-chip">
+        <div><div class="pac-num">#${p['Nº Paciente']} <span style="font-size:0.6rem;padding:1px 5px;border-radius:8px;${p['Estado']==='Completo'?'background:rgba(0,200,150,0.15);color:#00C896':'background:rgba(255,176,0,0.12);color:#FFB020'}">${p['Estado']==='Completo'?'✓':'⏳'}</span></div>
+        <div class="pac-info">${p['Nombre']||'Sin nombre'} · ${p['NHC']||'—'}</div></div>
+        <div style="display:flex;gap:3px">
+          <span style="cursor:pointer;color:var(--accent);font-size:0.72rem;padding:2px 5px;border-radius:3px;background:var(--accent-glow)" onclick="editPat(${i})" title="Editar">✏</span>
+          <span style="cursor:pointer;color:var(--text3);font-size:0.72rem;padding:2px 5px;border-radius:3px" onclick="imprimirFichaDirect(${i})" title="Imprimir ficha">🖨</span>
+          <span class="pac-del" onclick="delPat(${i})">✕</span>
+        </div>
+      </div>`).join('');
+  }
+  renderTable();
+}
+
+
 function drawPieTx() {
   try {
     const canvas = document.getElementById('pie-tx');
