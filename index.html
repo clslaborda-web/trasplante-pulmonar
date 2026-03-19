@@ -867,7 +867,7 @@ let patients = [];
 try { patients = JSON.parse(localStorage.getItem('txp_v3') || '[]'); } catch(e){}
 
 // ← PON AQUÍ TU URL DE APPS SCRIPT (entre las comillas)
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxg3uhge6LzwIn7OwWDj2JkKzHAvWGt_E3vdDfpf1fWgU9KCQkcW52o31e69cGRd5ic/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwAdGaRH6o9Q-U8RhK-fp1xXPZfFGTKqhFqBhsZkno0xPfMwXg6dNA432g7i113p8ue3w/exec';
 let editingId = null;  // _id del paciente en edición, null = nuevo paciente
 
 // Columnas en el mismo orden que la BD Excel v3 (121 cols)
