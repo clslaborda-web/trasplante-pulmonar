@@ -2058,6 +2058,39 @@ async function importarDeSheets() {
 }
 
 
+// ─── GRÁFICO DONUT ────────────────────────────────────────────────────────────
+function drawPieTx() {
+  try {
+    const canvas = document.getElementById('pie-tx');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const bip = patients.filter(p => p['Tipo Trasplante'] === 'Bipulmonar').length;
+    const uni = patients.filter(p => p['Tipo Trasplante'] === 'Unipulmonar').length;
+    const total = patients.length;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (total === 0) return;
+    const data = [
+      { val: bip, color: '#00C8FF' },
+      { val: uni, color: '#00E5A0' },
+      { val: total - bip - uni, color: '#4A6080' }
+    ].filter(d => d.val > 0);
+    let start = -Math.PI / 2;
+    const cx = canvas.width/2, cy = canvas.height/2, r = Math.min(cx,cy) - 4;
+    data.forEach(d => {
+      const angle = (d.val / total) * 2 * Math.PI;
+      ctx.beginPath(); ctx.moveTo(cx,cy);
+      ctx.arc(cx, cy, r, start, start + angle);
+      ctx.closePath(); ctx.fillStyle = d.color; ctx.fill();
+      start += angle;
+    });
+    ctx.beginPath(); ctx.arc(cx,cy,r*0.55,0,2*Math.PI);
+    ctx.fillStyle = '#111827'; ctx.fill();
+    ctx.fillStyle = '#E8F0FF'; ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(total, cx, cy);
+  } catch(e) {}
+}
+
 // Cuando se abre el formulario con ?nhc=XXXX o ?pac=N carga ese paciente
 (function() {
   try {
