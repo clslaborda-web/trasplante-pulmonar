@@ -1491,12 +1491,19 @@ function savePatient() {
             body: JSON.stringify({_action: 'clear_all'})
           });
           await new Promise(r => setTimeout(r, 600));
-          // 2. Reenviar todos — el nuevo lleva bandera de email
-          for (const p of patients) {
+          // 2. Reenviar todos — el ÚLTIMO lleva bandera de email
+          // (cuando llega el último, todos ya están en Sheets → lista completa)
+          const lastIdx = patients.length - 1;
+          for (let i = 0; i < patients.length; i++) {
+            const p = patients[i];
             const payload = {};
             COLS_BD.forEach(col => { payload[col] = (p[col] !== undefined && p[col] !== null) ? p[col] : ''; });
-            payload._action   = 'insert';
-            payload._sendEmail = (p._id === savedId) ? 'true' : 'false';
+            payload._action    = 'insert';
+            payload._sendEmail = (i === lastIdx) ? 'true' : 'false';
+            payload._newNom    = patients.find(px => px._id === savedId)?.['Nombre'] || '';
+            payload._newNHC    = patients.find(px => px._id === savedId)?.['NHC'] || '';
+            payload._newFTx    = patients.find(px => px._id === savedId)?.['Fecha Trasplante'] || '';
+            payload._newNPac   = patients.find(px => px._id === savedId)?.['Nº Paciente'] || '';
             await fetch(SHEETS_URL, {
               method: 'POST', mode: 'no-cors',
               headers: {'Content-Type': 'application/json'},
