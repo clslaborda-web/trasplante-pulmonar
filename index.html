@@ -2087,6 +2087,7 @@ async function importarDeSheets() {
     sortAndRenumber();
     localStorage.setItem('txp_v3', JSON.stringify(patients));
     renderPatList();
+    updateUI(patients[patients.length-1] || null);
 
     showToast(`✓ Importados: ${insertados} nuevos, ${actualizados} actualizados`, 'tok');
 
