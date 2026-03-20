@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoria Asistencial — Trasplante Pulmonar UCI</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', Arial, sans-serif; background: #F0F4F8; color: #1A2535; font-size: 10pt; }
+
+  /* ── PORTADA ── */
+  .portada { background: #0D1F35; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3rem; }
+  .portada .logo { color: #00C8FF; font-size: 2rem; margin-bottom: 1rem; }
+  .portada h1 { font-size: 1.6rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.5rem; }
+  .portada h2 { font-size: 2.5rem; font-weight: 700; color: #00C8FF; margin: 1rem 0; }
+  .portada .subtitulo { font-size: 1rem; color: rgba(255,255,255,0.6); margin-bottom: 2rem; }
+  .portada .autores { font-size: 0.9rem; color: rgba(255,255,255,0.8); line-height: 2; }
+  .portada .hospital { margin-top: 2rem; font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+
+  /* ── LAYOUT ── */
+  .contenido { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+  .loading { text-align: center; padding: 3rem; color: #666; font-size: 1rem; }
+  .loading-spinner { font-size: 2rem; animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* ── SECCIONES ── */
+  .seccion { background: #fff; border-radius: 10px; padding: 2rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .seccion-titulo { font-size: 1.1rem; font-weight: 600; color: #0D1F35; border-left: 4px solid #00C8FF; padding-left: 0.75rem; margin-bottom: 1.25rem; }
+  .seccion-subtitulo { font-size: 0.95rem; font-weight: 600; color: #1A3C5E; margin: 1rem 0 0.5rem; }
+
+  /* ── KPIS ── */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .kpi { background: linear-gradient(135deg, #0D1F35, #1A3C5E); color: #fff; border-radius: 10px; padding: 1.25rem; text-align: center; }
+  .kpi .valor { font-size: 2rem; font-weight: 700; color: #00C8FF; line-height: 1; }
+  .kpi .label { font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kpi .sub { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 0.2rem; }
+
+  /* ── TABLAS ── */
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th { background: #1A3C5E; color: #fff; padding: 7px 10px; text-align: center; font-weight: 600; }
+  td { padding: 6px 10px; border-bottom: 1px solid #EEF3F8; text-align: center; }
+  tr:nth-child(even) td { background: #F4F7FA; }
+  td:first-child { text-align: left; font-weight: 500; }
+
+  /* ── GRÁFICOS ── */
+  .graficos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .grafico-box { background: #fff; border-radius: 10px; padding: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .grafico-titulo { font-size: 0.85rem; font-weight: 600; color: #1A3C5E; margin-bottom: 1rem; text-align: center; }
+  canvas { max-height: 280px; }
+
+  /* ── TEXTO ── */
+  .texto-narrativo { line-height: 1.7; color: #334; font-size: 0.9rem; }
+  .texto-narrativo p { margin-bottom: 0.75rem; }
+  .texto-narrativo strong { color: #0D1F35; }
+
+  /* ── BADGE ── */
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+  .badge-green { background: #E6F4F1; color: #00875A; }
+  .badge-blue  { background: #E8F4FD; color: #1A3C5E; }
+  .badge-amber { background: #FFF8E6; color: #B36A00; }
+
+  /* ── BOTONES ── */
+  .btn-toolbar { display: flex; gap: 0.75rem; justify-content: flex-end; margin-bottom: 1rem; }
+  .btn { padding: 0.4rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; }
+  .btn-primary { background: #1A3C5E; color: #fff; }
+  .btn-print { background: #00C8FF; color: #0D1F35; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: #fff; font-size: 9pt; }
+    .portada { min-height: auto; padding: 2cm; page-break-after: always; }
+    .btn-toolbar { display: none; }
+    .seccion { box-shadow: none; border: 1px solid #DDE3EA; page-break-inside: avoid; }
+    .graficos-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @page { margin: 1.5cm; size: A4; }
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="portada" id="portada">
+  <div class="logo">🫁</div>
+  <div class="subtitulo">SERVICIO DE MEDICINA INTENSIVA</div>
+  <h1>MEMORIA ASISTENCIAL<br>TRASPLANTE PULMONAR</h1>
+  <h2 id="anio-portada">—</h2>
+  <div class="autores">
+    Dra. Judit Sacanell Lacasa<br>
+    Dr. César Laborda Soriano<br>
+    Dr. Marcos Buj Vicente
+  </div>
+  <div class="hospital">Hospital Universitario Vall d'Hebron · Área General UCI</div>
+</div>
+
+<!-- CONTENIDO -->
+<div class="contenido" id="contenido">
+
+  <div class="btn-toolbar noprint">
+    <button class="btn btn-primary" onclick="cargarDatos()">🔄 Actualizar datos</button>
+    <button class="btn btn-print" onclick="window.print()">🖨 Imprimir / PDF</button>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="loading-spinner">⏳</div>
+    <p style="margin-top:1rem">Cargando datos de Google Sheets...</p>
+  </div>
+
+  <div id="memoria-contenido" style="display:none">
+
+    <!-- 1. RESUMEN EJECUTIVO -->
+    <div class="seccion">
+      <div class="seccion-titulo">1. Resumen Ejecutivo</div>
+      <div class="kpis" id="kpis-resumen"></div>
+      <div class="texto-narrativo" id="texto-resumen"></div>
+    </div>
+
+    <!-- 2. DEMOGRAFÍA -->
+    <div class="seccion">
+      <div class="seccion-titulo">2. Características de la Población</div>
+      <div class="graficos-grid">
+        <div class="grafico-box">
+          <div class="grafico-titulo">Distribución por Enfermedad de Base</div>
+          <canvas id="chart-enf"></canvas>
+        </div>
+        <div class="grafico-box">
+          <div class="grafico-titulo">Tipo de Trasplante</div>
+          <canvas id="chart-tipo"></canvas>
+        </div>
+      </div>
+      <br>
+      <table id="tabla-demografia"></table>
+    </div>
+
+    <!-- 3. CIRUGÍA -->
+    <div class="seccion">
+      <div class="seccion-titulo">3. Datos Quirúrgicos</div>
+      <table id="tabla-cirugia"></table>
+    </div>
+
+    <!-- 4. DPI -->
+    <div class="seccion">
+      <div class="seccion-titulo">4. Disfunción Primaria del Injerto (ISHLT 2016)</div>
+      <div class="graficos-grid">
+        <div class="grafico-box">
+          <div class="grafico-titulo">DPI T0 — Ingreso UCI</div>
+          <canvas id="chart-dpi0"></canvas>
+        </div>
+        <div class="grafico-box">
+          <div class="grafico-titulo">DPI T72 — 72h post-trasplante</div>
+          <canvas id="chart-dpi72"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. COMPLICACIONES -->
+    <div class="seccion">
+      <div class="seccion-titulo">5. Complicaciones durante la Estancia UCI</div>
+      <div class="graficos-grid">
+        <div class="grafico-box" style="grid-column:1/-1">
+          <div class="grafico-titulo">Incidencia de Complicaciones (%)</div>
+          <canvas id="chart-complic"></canvas>
+        </div>
+      </div>
+      <br>
+      <table id="tabla-complic"></table>
+    </div>
+
+    <!-- 6. ECMO -->
+    <div class="seccion">
+      <div class="seccion-titulo">6. Soporte Extracorpóreo (ECMO)</div>
+      <div class="kpis" id="kpis-ecmo"></div>
+      <table id="tabla-ecmo"></table>
+    </div>
+
+    <!-- 7. RESULTADOS -->
+    <div class="seccion">
+      <div class="seccion-titulo">7. Resultados al Alta UCI</div>
+      <div class="graficos-grid">
+        <div class="grafico-box">
+          <div class="grafico-titulo">Supervivencia al Alta UCI</div>
+          <canvas id="chart-superv"></canvas>
+        </div>
+        <div class="grafico-box">
+          <div class="grafico-titulo">Distribución Alta UCI</div>
+          <canvas id="chart-alta"></canvas>
+        </div>
+      </div>
+      <br>
+      <table id="tabla-resultados"></table>
+    </div>
+
+    <!-- 8. CONCLUSIONES -->
+    <div class="seccion">
+      <div class="seccion-titulo">8. Conclusiones</div>
+      <div class="texto-narrativo" id="texto-conclusiones"></div>
+    </div>
+
+  </div><!-- /memoria-contenido -->
+</div><!-- /contenido -->
+
+<script>
+// ══ CONFIGURACIÓN ══════════════════════════════════════════════════════════════
+// Misma URL de Apps Script del formulario
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwAdGaRH6o9Q-U8RhK-fp1xXPZfFGTKqhFqBhsZkno0xPfMwXg6dNA432g7i113p8ue3w/exec';
+const ANO = new Date().getFullYear();
+
+const COLORES = {
+  navy:   '#0D1F35', accent: '#00C8FF', green: '#00E5A0',
+  amber:  '#FFB020', red:    '#FF4B6E', purple:'#8B5CF6',
+  teal:   '#14B8A6', orange: '#F97316',
+  palette: ['#00C8FF','#00E5A0','#FFB020','#FF4B6E','#8B5CF6','#14B8A6','#F97316','#60A5FA','#A78BFA','#34D399','#FB923C','#F472B6','#94A3B8']
+};
+
+// ══ CARGA DE DATOS ═════════════════════════════════════════════════════════════
+async function cargarDatos() {
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('memoria-contenido').style.display = 'none';
+
+  try {
+    const resp = await fetch(SHEETS_URL, { method: 'GET' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.status !== 'ok' || !data.pacientes) throw new Error('Sin datos');
+
+    const pacs = data.pacientes;
+    if (!pacs.length) {
+      document.getElementById('loading').innerHTML = '<p>No hay pacientes en la base de datos.</p>';
+      return;
+    }
+
+    // Detectar año
+    const anos = pacs.map(p => {
+      const f = p['Fecha Trasplante'] || '';
+      const m = f.match(/(\d{4})/);
+      return m ? m[1] : ANO;
+    });
+    const anoActual = anos.sort()[Math.floor(anos.length/2)] || ANO;
+    document.getElementById('anio-portada').textContent = anoActual;
+
+    generarMemoria(pacs, anoActual);
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('memoria-contenido').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('loading').innerHTML =
+      '<p style="color:#FF4B6E">⚠ Error al cargar datos: ' + e.message + '<br>Comprueba que la URL de Sheets está configurada.</p>';
+  }
+}
+
+// ══ GENERACIÓN DE MEMORIA ══════════════════════════════════════════════════════
+function generarMemoria(pacs, ano) {
+  const N = pacs.length;
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const cnt = (key, val) => pacs.filter(p => p[key] === val).length;
+  const pct = (n, total) => total ? (n/total*100).toFixed(1) + '%' : '—';
+  const nums = (key) => pacs.map(p => parseFloat(p[key])).filter(v => !isNaN(v));
+  const med = arr => { if(!arr.length) return '—'; const s=[...arr].sort((a,b)=>a-b); const m=Math.floor(s.length/2); return s.length%2?s[m]:((s[m-1]+s[m])/2).toFixed(1); }
+  const iqr = arr => { if(!arr.length) return ''; const s=[...arr].sort((a,b)=>a-b); const q1=s[Math.floor(s.length/4)]; const q3=s[Math.floor(3*s.length/4)]; return `(${q1}–${q3})`; }
+  const mean = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1) : '—';
+  const sd = arr => { if(arr.length<2) return ''; const m=arr.reduce((a,b)=>a+b,0)/arr.length; return (Math.sqrt(arr.reduce((a,b)=>a+(b-m)**2,0)/(arr.length-1))).toFixed(1); }
+
+  // ── KPIs principales ─────────────────────────────────────────────────────────
+  const vivos = cnt('Alta UCI','Vivo');
+  const fall  = cnt('Alta UCI','Fallecido');
+  const ecmo  = cnt('ECMO','Sí');
+  const bip   = cnt('Tipo Trasplante','Bipulmonar');
+  const superv = N ? (vivos/N*100).toFixed(1) : 0;
+
+  const edades = nums('Edad (años)');
+  const apache = nums('APACHE II');
+  const las    = nums('LAS');
+  const diasVM  = nums('Días VM');
+  const diasUCI = nums('Días UCI');
+
+  document.getElementById('kpis-resumen').innerHTML = [
+    { v: N,           l: 'Trasplantes', s: 'adultos' },
+    { v: superv+'%',  l: 'Supervivencia UCI', s: vivos+' altas' },
+    { v: bip,         l: 'Bipulmonares', s: pct(bip,N) },
+    { v: N-bip,       l: 'Unipulmonares', s: pct(N-bip,N) },
+    { v: ecmo,        l: 'Con ECMO', s: pct(ecmo,N) },
+    { v: mean(edades)+'a', l: 'Edad media', s: '±'+sd(edades)+' años' },
+  ].map(k => `<div class="kpi"><div class="valor">${k.v}</div><div class="label">${k.l}</div><div class="sub">${k.s}</div></div>`).join('');
+
+  // ── Texto narrativo ──────────────────────────────────────────────────────────
+  document.getElementById('texto-resumen').innerHTML = `
+    <p>Durante el año <strong>${ano}</strong> se han realizado un total de <strong>${N} trasplantes pulmonares</strong> en adultos en el Hospital Universitario Vall d'Hebron, con ingreso postoperatorio en el Servicio de Medicina Intensiva del Área General.</p>
+    <p>De los ${N} trasplantes, <strong>${bip} (${pct(bip,N)}) han sido bipulmonares</strong> y ${N-bip} (${pct(N-bip,N)}) unipulmonares. El ${pct(cnt('Género','Hombre'),N)} de los receptores han sido hombres. La edad media fue de ${mean(edades)} ± ${sd(edades)} años.</p>
+    <p>La <strong>supervivencia al alta de UCI ha sido del ${superv}%</strong> (${vivos}/${N} pacientes). Un total de ${ecmo} pacientes (${pct(ecmo,N)}) requirieron soporte con ECMO. La mediana de estancia en UCI fue de ${med(diasUCI)} días y la de ventilación mecánica de ${med(diasVM)} días.</p>`;
+
+  // ── Tabla demografía ─────────────────────────────────────────────────────────
+  document.getElementById('tabla-demografia').innerHTML = `
+    <tr><th>Variable</th><th>Resultado</th></tr>
+    <tr><td>N trasplantes adultos</td><td>${N}</td></tr>
+    <tr><td>Edad (media ± DS)</td><td>${mean(edades)} ± ${sd(edades)} años</td></tr>
+    <tr><td>Hombres</td><td>${cnt('Género','Hombre')} (${pct(cnt('Género','Hombre'),N)})</td></tr>
+    <tr><td>Mujeres</td><td>${cnt('Género','Mujer')} (${pct(cnt('Género','Mujer'),N)})</td></tr>
+    <tr><td>APACHE II (mediana)</td><td>${med(apache)} ${iqr(apache)}</td></tr>
+    <tr><td>LAS (mediana)</td><td>${med(las)} ${iqr(las)}</td></tr>
+    <tr><td>Prioridad Nacional</td><td>${cnt('Lista de espera','Prioridad nacional')} (${pct(cnt('Lista de espera','Prioridad nacional'),N)})</td></tr>
+    <tr><td>Retrasplante</td><td>${cnt('Retrasplante','Sí')} (${pct(cnt('Retrasplante','Sí'),N)})</td></tr>`;
+
+  // ── Tabla cirugía ─────────────────────────────────────────────────────────────
+  const iq1 = nums('T. Isquemia 1º (min)');
+  const iq2 = nums('T. Isquemia 2º (min)');
+  const cec = cnt('CEC','Sí') + cnt('CEC','ECMO');
+  document.getElementById('tabla-cirugia').innerHTML = `
+    <tr><th>Variable</th><th>Resultado</th></tr>
+    <tr><td>Bipulmonar</td><td>${bip} (${pct(bip,N)})</td></tr>
+    <tr><td>Unipulmonar</td><td>${N-bip} (${pct(N-bip,N)})</td></tr>
+    <tr><td>Soporte extracorpóreo intraoperatorio (CEC/ECMO)</td><td>${cec} (${pct(cec,N)})</td></tr>
+    <tr><td>T. Isquemia 1º — mediana (min)</td><td>${med(iq1)} ${iqr(iq1)}</td></tr>
+    <tr><td>T. Isquemia 2º — mediana (min)</td><td>${med(iq2)} ${iqr(iq2)}</td></tr>
+    <tr><td>Tórax abierto al ingreso UCI</td><td>${cnt('Tórax abierto al ingreso UCI','Sí')} (${pct(cnt('Tórax abierto al ingreso UCI','Sí'),N)})</td></tr>`;
+
+  // ── Tabla complicaciones ──────────────────────────────────────────────────────
+  const compls = [
+    ['Reintervención quirúrgica','Reintervención quirúrgica'],
+    ['Miopatía','Miopatía'],
+    ['Disfunción diafragmática','Disfunción diafragmática'],
+    ['Gastroparesia','Gastroparesia'],
+    ['IRA','IRA'],
+    ['HDFVVC','HDFVVC'],
+    ['Neumonía','Neumonía'],
+    ['Traqueostomía','Traqueostomía'],
+    ['TEP','TEP'],
+    ['Delirium','Delirium'],
+    ['Shock séptico','Shock séptico'],
+    ['Rechazo','Rechazo'],
+  ];
+  document.getElementById('tabla-complic').innerHTML = `
+    <tr><th>Complicación</th><th>N</th><th>%</th></tr>
+    ${compls.map(([label, key]) => {
+      const n = cnt(key,'Sí');
+      return n > 0 ? `<tr><td>${label}</td><td>${n}</td><td>${pct(n,N)}</td></tr>` : '';
+    }).join('')}`;
+
+  // ── KPIs ECMO ─────────────────────────────────────────────────────────────────
+  const ecmoPre  = cnt('ECMO pre-Tx','Sí');
+  const ecmoAwake = cnt('ECMO awake','Sí');
+  const diasEcmo = nums('Días ECMO total');
+  document.getElementById('kpis-ecmo').innerHTML = [
+    { v: ecmo,     l: 'ECMO total',    s: pct(ecmo,N) },
+    { v: ecmoPre,  l: 'ECMO pre-Tx',   s: pct(ecmoPre,N) },
+    { v: ecmoAwake,l: 'ECMO awake',    s: pct(ecmoAwake,N) },
+    { v: med(diasEcmo)+'d', l: 'Días ECMO', s: 'mediana' },
+  ].map(k => `<div class="kpi"><div class="valor">${k.v}</div><div class="label">${k.l}</div><div class="sub">${k.s}</div></div>`).join('');
+
+  document.getElementById('tabla-ecmo').innerHTML = `
+    <tr><th>Variable ECMO</th><th>N</th><th>%</th></tr>
+    <tr><td>ECMO total</td><td>${ecmo}</td><td>${pct(ecmo,N)}</td></tr>
+    <tr><td>ECMO pre-trasplante</td><td>${ecmoPre}</td><td>${pct(ecmoPre,N)}</td></tr>
+    <tr><td>ECMO awake</td><td>${ecmoAwake}</td><td>${pct(ecmoAwake,N)}</td></tr>
+    <tr><td>Días ECMO (mediana)</td><td colspan="2">${med(diasEcmo)} ${iqr(diasEcmo)}</td></tr>`;
+
+  // ── Tabla resultados ──────────────────────────────────────────────────────────
+  document.getElementById('tabla-resultados').innerHTML = `
+    <tr><th>Variable</th><th>Resultado</th></tr>
+    <tr><td>Alta vivo</td><td>${vivos} (${pct(vivos,N)})</td></tr>
+    <tr><td>Fallecido en UCI</td><td>${fall} (${pct(fall,N)})</td></tr>
+    <tr><td>Supervivencia UCI</td><td><strong>${superv}%</strong></td></tr>
+    <tr><td>Días VM (mediana)</td><td>${med(diasVM)} ${iqr(diasVM)}</td></tr>
+    <tr><td>Días UCI (mediana)</td><td>${med(diasUCI)} ${iqr(diasUCI)}</td></tr>`;
+
+  // ── Conclusiones ──────────────────────────────────────────────────────────────
+  document.getElementById('texto-conclusiones').innerHTML = `
+    <p>1. Durante el año ${ano} se han realizado <strong>${N} trasplantes pulmonares</strong> en adultos en el Hospital Universitario Vall d'Hebron, manteniendo la actividad trasplantadora.</p>
+    <p>2. La <strong>supervivencia al alta de UCI ha sido del ${superv}%</strong>, resultado excelente considerando la complejidad de estos pacientes.</p>
+    <p>3. La disfunción primaria del injerto grado 3 al ingreso se produjo en el ${pct(cnt('DPI 0h','Grado 3'),N)} de los casos, con una mejora significativa a las 72h (grado 0: ${pct(cnt('DPI 72h','Grado 0'),N)}).</p>
+    <p>4. Un ${pct(ecmo,N)} de los pacientes requirieron soporte con ECMO, reflejando la complejidad del programa.</p>
+    <p>5. La mediana de estancia en UCI fue de ${med(diasUCI)} días y de ventilación mecánica de ${med(diasVM)} días.</p>`;
+
+  // ══ GRÁFICOS ═══════════════════════════════════════════════════════════════════
+  const dpiLabels = ['Grado 0','Grado 0T','Grado 1','Grado 2','Grado 3','Inclasificable'];
+
+  // Enfermedad base
+  const enfs = {}; pacs.forEach(p => { const e = p['Enfermedad de base']; if(e) enfs[e]=(enfs[e]||0)+1; });
+  const enfSort = Object.entries(enfs).sort((a,b)=>b[1]-a[1]);
+  new Chart(document.getElementById('chart-enf'), { type:'bar', data:{
+    labels: enfSort.map(e=>e[0]), datasets:[{ data: enfSort.map(e=>e[1]), backgroundColor: COLORES.palette }]
+  }, options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:9}}}}}});
+
+  // Tipo trasplante
+  new Chart(document.getElementById('chart-tipo'), { type:'doughnut', data:{
+    labels:['Bipulmonar','Unipulmonar'], datasets:[{ data:[bip,N-bip], backgroundColor:[COLORES.accent,COLORES.green] }]
+  }, options:{ plugins:{legend:{position:'bottom'}}}});
+
+  // DPI T0
+  const dpi0vals = dpiLabels.map(g => cnt('DPI 0h', g));
+  new Chart(document.getElementById('chart-dpi0'), { type:'bar', data:{
+    labels: dpiLabels, datasets:[{ data: dpi0vals, backgroundColor: [COLORES.green,COLORES.green,COLORES.accent,COLORES.amber,COLORES.red,COLORES.palette[7]] }]
+  }, options:{ plugins:{legend:{display:false}}, scales:{y:{ticks:{stepSize:1}}}}});
+
+  // DPI T72
+  const dpi72vals = dpiLabels.map(g => cnt('DPI 72h', g));
+  new Chart(document.getElementById('chart-dpi72'), { type:'bar', data:{
+    labels: dpiLabels, datasets:[{ data: dpi72vals, backgroundColor: [COLORES.green,COLORES.green,COLORES.accent,COLORES.amber,COLORES.red,COLORES.palette[7]] }]
+  }, options:{ plugins:{legend:{display:false}}, scales:{y:{ticks:{stepSize:1}}}}});
+
+  // Complicaciones
+  const complData = compls.map(([l,k]) => ({ label:l, n:cnt(k,'Sí') })).filter(c=>c.n>0).sort((a,b)=>b.n-a.n);
+  new Chart(document.getElementById('chart-complic'), { type:'bar', data:{
+    labels: complData.map(c=>c.label), datasets:[{ data:complData.map(c=>c.n), backgroundColor: COLORES.palette }]
+  }, options:{ plugins:{legend:{display:false}}, scales:{x:{ticks:{font:{size:9}}},y:{ticks:{stepSize:1}}}}});
+
+  // Supervivencia donut
+  new Chart(document.getElementById('chart-superv'), { type:'doughnut', data:{
+    labels:['Vivos al alta','Fallecidos'], datasets:[{ data:[vivos,fall], backgroundColor:[COLORES.green,COLORES.red] }]
+  }, options:{ plugins:{legend:{position:'bottom'}}}});
+
+  // Alta UCI distribución
+  const altas = {}; pacs.forEach(p => { const a = p['Alta UCI']; if(a) altas[a]=(altas[a]||0)+1; });
+  new Chart(document.getElementById('chart-alta'), { type:'pie', data:{
+    labels: Object.keys(altas), datasets:[{ data:Object.values(altas), backgroundColor:COLORES.palette }]
+  }, options:{ plugins:{legend:{position:'bottom'}}}});
+}
+
+// ══ INICIO ═════════════════════════════════════════════════════════════════════
+window.onload = cargarDatos;
+</script>
+</body>
+</html>
