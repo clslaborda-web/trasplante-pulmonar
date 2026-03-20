@@ -2065,12 +2065,14 @@ async function importarDeSheets() {
     pacientesSheets.forEach(pSheet => {
       const nhc  = String(pSheet['NHC'] || '').trim();
       const nom  = String(pSheet['Nombre'] || '').trim();
-      if (!nhc && !nom) return; // fila vacía, ignorar
+      const nPac = String(pSheet['Nº Paciente'] || '').trim();
+      if (!nom && !nhc) return; // fila vacía, ignorar
 
-      // Buscar si ya existe en localStorage por NHC
-      const idxExistente = nhc
-        ? patients.findIndex(p => String(p['NHC'] || '').trim() === nhc)
-        : patients.findIndex(p => String(p['Nombre'] || '').trim() === nom);
+      // Buscar si ya existe: primero por Nº Paciente, luego NHC, luego Nombre
+      let idxExistente = -1;
+      if (nPac) idxExistente = patients.findIndex(p => String(p['Nº Paciente'] || '').trim() === nPac);
+      if (idxExistente < 0 && nhc) idxExistente = patients.findIndex(p => String(p['NHC'] || '').trim() === nhc);
+      if (idxExistente < 0 && nom) idxExistente = patients.findIndex(p => String(p['Nombre'] || '').trim() === nom);
 
       if (idxExistente >= 0) {
         // Actualizar — mantener el _id local
