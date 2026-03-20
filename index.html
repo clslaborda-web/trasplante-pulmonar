@@ -268,6 +268,13 @@ function checkPassword() {
     sessionStorage.setItem('txp_auth', '1');
     document.getElementById('login-screen').style.display = 'none';
     document.body.style.overflow = '';
+    // Si no hay pacientes en local, importar automáticamente desde Sheets
+    if (!patients.length && SHEETS_URL) {
+      setTimeout(function() {
+        showToast('⏳ Cargando pacientes desde Sheets...', 'tinf');
+        importarDeSheets();
+      }, 500);
+    }
   } else {
     document.getElementById('pwd-error').style.display = 'block';
     document.getElementById('pwd-input').value = '';
