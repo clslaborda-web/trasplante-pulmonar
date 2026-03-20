@@ -1581,7 +1581,7 @@ function renderTable() {
     const dead = p['Alta UCI']==='Fallecido';
     h += `<tr class="${dead?'dead-row':''}">${PREV.map(c=>{
       let v = p[c]; if(v===null||v===undefined||v==='') v='—';
-      if(c==='Género') v=v==='Masculino'?'H':v==='Femenino'?'M':v;
+      if(c==='Género') v=v==='Masculino'?'M':v==='Femenino'?'F':v;
       if(c==='Tipo Trasplante') v=v==='Unipulmonar'?'Uni':v==='Bipulmonar'?'Bi':v;
       if(c==='Alta UCI') v=v==='Fallecido'?'✝':v;
       return `<td>${v}</td>`;
