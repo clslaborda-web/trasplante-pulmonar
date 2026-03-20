@@ -1455,18 +1455,15 @@ function savePatient() {
     showToast('⚠ Introduce la fecha de trasplante','terr'); return;
   }
   const d = collectForm();
+  const isNew = (editingId === null);
   let savedId;
 
-  if (editingId !== null) {
-    // ── Modo edición: actualizar paciente existente ──
+  if (!isNew) {
+    // ── Editar paciente existente ──
     const idx = patients.findIndex(p => p._id === editingId);
-    if (idx >= 0) {
-      d._id = editingId;
-      savedId = editingId;
-      patients[idx] = d;
-    }
+    if (idx >= 0) { d._id = editingId; savedId = editingId; patients[idx] = d; }
   } else {
-    // ── Modo nuevo ──
+    // ── Paciente nuevo ──
     d._id = Date.now();
     savedId = d._id;
     patients.push(d);
@@ -1474,21 +1471,56 @@ function savePatient() {
 
   sortAndRenumber();
   localStorage.setItem('txp_v3', JSON.stringify(patients));
-  const saved = patients.find(p => p._id === savedId);
-  const isEdit = editingId !== null;
-  sendToSheets(saved, isEdit);   // ← sincroniza con Google Sheets
+  const savedFinal = patients.find(p => p._id === savedId);
+  const isEdit = !isNew;
 
-  // El email lo envía Apps Script automáticamente al recibir el INSERT
+  // ── Sincronizar con Sheets ──────────────────────────────────────────────────
+  if (SHEETS_URL) {
+    if (isEdit) {
+      // Edición: solo actualizar ese paciente
+      sendToSheets(savedFinal, true, false);
+    } else {
+      // Paciente nuevo: limpiar Sheets y reenviar todos en orden correcto
+      // El nuevo paciente lleva _sendEmail:true para que Apps Script mande el email
+      setTimeout(async () => {
+        try {
+          // 1. Borrar todo
+          await fetch(SHEETS_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({_action: 'clear_all'})
+          });
+          await new Promise(r => setTimeout(r, 600));
+          // 2. Reenviar todos — el nuevo lleva bandera de email
+          for (const p of patients) {
+            const payload = {};
+            COLS_BD.forEach(col => { payload[col] = (p[col] !== undefined && p[col] !== null) ? p[col] : ''; });
+            payload._action   = 'insert';
+            payload._sendEmail = (p._id === savedId) ? 'true' : 'false';
+            await fetch(SHEETS_URL, {
+              method: 'POST', mode: 'no-cors',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify(payload)
+            });
+            await new Promise(r => setTimeout(r, 350));
+          }
+        } catch(e) { console.warn('Sync error:', e); }
+      }, 100);
+    }
+  }
+
+  // ── UI ──────────────────────────────────────────────────────────────────────
   const msg = isEdit
-    ? `✓ Paciente #${saved?.['Nº Paciente']} actualizado`
-    : `✓ Paciente #${saved?.['Nº Paciente']} guardado`;
+    ? `✓ Paciente #${savedFinal?.['Nº Paciente']} actualizado`
+    : `✓ Paciente #${savedFinal?.['Nº Paciente']} guardado`;
 
-  // Reset edit state BEFORE clearForm (clearForm also resets it, that's fine)
   editingId = null;
   document.getElementById('save-btn').textContent = '💾 Guardar paciente';
   document.getElementById('edit-banner')?.remove();
+  const pb = document.getElementById('print-btn');
+  if (pb) pb.style.display = 'none';
 
-  updateUI(saved || patients[patients.length-1]);
+  updateUI(savedFinal || patients[patients.length-1]);
   showToast(msg, 'tok');
   clearForm();
 }
