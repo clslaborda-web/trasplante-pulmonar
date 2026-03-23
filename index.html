@@ -2187,56 +2187,227 @@ function imprimirFicha() {
 
 function _doImprimirFicha(p) {
   const val = k => (p[k] !== undefined && p[k] !== '' && p[k] !== null) ? p[k] : '—';
-  const yn  = k => p[k] === 'Sí' ? '<span style="color:#00875A;font-weight:600">Sí</span>' : (p[k] || '—');
-  const sec = (title, color, rows) => `<div style="margin-bottom:0.5cm;break-inside:avoid">
-    <div style="background:${color};color:#fff;padding:3px 8px;font-size:7.5pt;font-weight:bold;text-transform:uppercase">${title}</div>
-    <table style="width:100%;border-collapse:collapse">${rows.map(([l,v],i) =>
-      `<tr style="background:${i%2===0?'#F4F7FA':'#fff'}"><td style="padding:2.5px 6px;color:#555;font-size:8.5pt;width:45%">${l}</td><td style="padding:2.5px 6px;color:#0D1F35;font-size:8.5pt">${v}</td></tr>`
-    ).join('')}</table></div>`;
+  const yn  = k => {
+    const v = p[k];
+    if (v === 'Sí') return '<span style="color:#00875A;font-weight:600">Sí</span>';
+    if (v === 'No') return '<span style="color:#999">No</span>';
+    return v || '—';
+  };
+
+  const estilos = `
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; font-size: 8pt; color: #1A1A2E; background: #fff; }
+      @page { margin: 1cm; size: A4; }
+      .portada { background: #0D1F35; color: #fff; padding: 12px 16px; margin-bottom: 6px; }
+      .portada h1 { font-size: 13pt; font-weight: 700; }
+      .portada .sub { font-size: 8pt; color: rgba(255,255,255,0.6); margin-top: 3px; }
+      .seccion { margin-bottom: 6px; page-break-inside: avoid; }
+      .sec-titulo { background: #1E3A5F; color: #fff; padding: 3px 8px; font-size: 8pt; font-weight: bold; text-transform: uppercase; }
+      table { width: 100%; border-collapse: collapse; }
+      td { padding: 2px 6px; border-bottom: 1px solid #EEF3F8; font-size: 7.5pt; }
+      td:first-child { color: #555; width: 38%; }
+      td:last-child { color: #0D1F35; font-weight: 500; }
+      tr:nth-child(even) td { background: #F4F7FA; }
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+      .noprint { text-align: center; padding: 12px; background: #f5f5f5; margin-top: 8px; }
+      .noprint button { background: #1A3C5E; color: #fff; border: none; border-radius: 5px; padding: 6px 16px; cursor: pointer; margin: 0 4px; }
+    </style>`;
+
+  const fila = (label, valor) =>
+    `<tr><td>${label}</td><td>${valor}</td></tr>`;
+
+  const secTitulo = (title, color) =>
+    `<div class="sec-titulo" style="background:${color}">${title}</div>`;
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-<title>Ficha #${val('Nº Paciente')} — ${val('Nombre')}</title>
-<style>body{font-family:Arial,sans-serif;font-size:9pt;color:#1A1A2E;background:#fff}
-@page{margin:1.5cm;size:A4}@media print{.noprint{display:none}}</style></head><body>
-<div style="background:#0D1F35;color:#fff;padding:15px 20px;margin-bottom:0.4cm">
-  <div style="color:#00C8FF;font-size:9pt;text-transform:uppercase">Trasplante Pulmonar UCI · Vall d'Hebron</div>
-  <div style="font-size:16pt;font-weight:bold;margin-top:4px">Paciente #${val('Nº Paciente')} — ${val('Nombre')}</div>
-  <div style="font-size:8pt;color:rgba(255,255,255,0.6);margin-top:4px">NHC: ${val('NHC')} · Fecha Tx: ${val('Fecha Trasplante')} · ${val('Tipo Trasplante')} · Estado: ${val('Estado')}</div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4cm">
-${sec('Datos Generales','#1E3A5F',[
-  ['Edad',val('Edad (años)')],['Género',val('Género')],
-  ['Enfermedad de base',val('Enfermedad de base')],
-  ['APACHE II',val('APACHE II')],['LAS',val('LAS')],
-  ['Retrasplante',yn('Retrasplante')],
-])}
-${sec('Estancia UCI','#943126',[
-  ['Fecha ingreso UCI',val('Fecha ingreso UCI')],
-  ['Fecha Trasplante',val('Fecha Trasplante')],
-  ['Fecha alta UCI',val('Fecha alta UCI')],
-  ['Días UCI',val('Días UCI')],
-  ['Días post-Tx',val('Días de Trasplante')],
-  ['Días VM',val('Días VM')],
-])}
-${sec('Cirugía','#117A65',[
-  ['Tipo Trasplante',val('Tipo Trasplante')],
-  ['CEC',val('CEC')],['T. CEC (min)',val('T. CEC (min)')],
-  ['Isquemia 1º (min)',val('T. Isquemia 1º (min)')],
-  ['Isquemia 2º (min)',val('T. Isquemia 2º (min)')],
-  ['Tórax abierto',yn('Tórax abierto al ingreso UCI')],
-])}
-${sec('DPI','#1A5276',[
-  ['DPI T0h',val('DPI 0h')],['PaFI T0h',val('PaFI 0h (mmHg)')],
-  ['DPI T72h',val('DPI 72h')],['PaFI T72h',val('PaFI 72h (mmHg)')],
-])}
-</div>
-<div class="noprint" style="text-align:center;padding:1cm;background:#f5f5f5;margin-top:0.5cm">
-  <button onclick="window.print()" style="background:#1A3C5E;color:#fff;border:none;border-radius:6px;padding:0.5rem 1.5rem;cursor:pointer">🖨 Imprimir / Guardar PDF</button>
-  <button onclick="window.close()" style="background:#eee;border:none;border-radius:6px;padding:0.5rem 1rem;cursor:pointer;margin-left:0.5rem">✕ Cerrar</button>
-</div>
-</body></html>`;
+  <title>Ficha #${val('Nº Paciente')} — ${val('Nombre')}</title>${estilos}</head><body>
 
-  const win = window.open('','_blank','width=900,height=700');
+  <div class="portada">
+    <h1>🫁 Paciente #${val('Nº Paciente')} — ${val('Nombre')}</h1>
+    <div class="sub">NHC: ${val('NHC')} · Fecha Tx: ${val('Fecha Trasplante')} · ${val('Tipo Trasplante')} · Estado: ${val('Estado')} · Impreso: ${new Date().toLocaleDateString('es-ES')}</div>
+  </div>
+
+  <div class="grid2">
+
+    <div>
+      <div class="seccion">
+        ${secTitulo('Datos Generales','#1E3A5F')}
+        <table>
+          ${fila('Edad', val('Edad (años)') + ' años')}
+          ${fila('Género', val('Género'))}
+          ${fila('Enfermedad de base', val('Enfermedad de base'))}
+          ${fila('APACHE II', val('APACHE II'))}
+          ${fila('LAS', val('LAS'))}
+          ${fila('Lista de espera', val('Lista de espera'))}
+          ${fila('Retrasplante', yn('Retrasplante'))}
+        </table>
+      </div>
+
+      <div class="seccion">
+        ${secTitulo('Estancia UCI','#943126')}
+        <table>
+          ${fila('Fecha ingreso UCI', val('Fecha ingreso UCI'))}
+          ${fila('Fecha Trasplante', val('Fecha Trasplante'))}
+          ${fila('Fecha alta UCI', val('Fecha alta UCI'))}
+          ${fila('Días UCI', val('Días UCI'))}
+          ${fila('Días post-Tx', val('Días de Trasplante'))}
+          ${fila('Fecha priorización', val('Fecha priorización'))}
+          ${fila('Días UCI pre-Tx', val('Días UCI pre-trasplante'))}
+          ${fila('Fecha inicio VM', val('Fecha inicio VM'))}
+          ${fila('Fecha retirada VM', val('Fecha retirada VM'))}
+          ${fila('Días VM', val('Días VM'))}
+        </table>
+      </div>
+
+      <div class="seccion">
+        ${secTitulo('Cirugía','#117A65')}
+        <table>
+          ${fila('Tipo Trasplante', val('Tipo Trasplante'))}
+          ${fila('CEC', val('CEC'))}
+          ${fila('T. CEC (min)', val('T. CEC (min)'))}
+          ${fila('Isquemia 1º (min)', val('T. Isquemia 1º (min)'))}
+          ${fila('Isquemia 2º (min)', val('T. Isquemia 2º (min)'))}
+          ${fila('Tórax abierto', yn('Tórax abierto al ingreso UCI'))}
+          ${fila('Inc. sangrado', yn('Inc. sangrado (politransfusión)'))}
+          ${fila('Inc. PCR', yn('Inc. PCR'))}
+          ${fila('Inc. desgarro vasc.', yn('Inc. desgarro vascular'))}
+          ${fila('Inc. lobectomía', yn('Inc. lobectomía'))}
+          ${fila('Inc. resección atíp.', yn('Inc. resección atípica'))}
+          ${fila('Inc. otros periop.', val('Inc. otros periop.'))}
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="seccion">
+        ${secTitulo('DPI (ISHLT 2016)','#1A5276')}
+        <table>
+          ${fila('DPI T0', val('DPI 0h'))} ${fila('PaFI T0', val('PaFI 0h (mmHg)'))}
+          ${fila('SaFI T0', val('SaFI 0h'))} ${fila('Infiltrados T0', yn('Infiltrados 0h'))}
+          ${fila('NO inhalado T0', yn('NO inhalado 0h'))} ${fila('Prono T0', yn('Prono 0h'))}
+          ${fila('DPI T24', val('DPI 24h'))} ${fila('PaFI T24', val('PaFI 24h (mmHg)'))}
+          ${fila('NO inhalado T24', yn('NO inhalado 24h'))} ${fila('Prono T24', yn('Prono 24h'))}
+          ${fila('DPI T48', val('DPI 48h'))} ${fila('PaFI T48', val('PaFI 48h (mmHg)'))}
+          ${fila('NO inhalado T48', yn('NO inhalado 48h'))} ${fila('Prono T48', yn('Prono 48h'))}
+          ${fila('DPI T72', val('DPI 72h'))} ${fila('PaFI T72', val('PaFI 72h (mmHg)'))}
+          ${fila('NO inhalado T72', yn('NO inhalado 72h'))} ${fila('Prono T72', yn('Prono 72h'))}
+        </table>
+      </div>
+
+      <div class="seccion">
+        ${secTitulo('ECMO','#1E3A5F')}
+        <table>
+          ${fila('Evaluado ECMO', yn('Evaluado en ECMO'))}
+          ${fila('ECMO', yn('ECMO'))}
+          ${fila('ECMO pre-Tx', yn('ECMO pre-Tx'))}
+          ${fila('ECMO awake', yn('ECMO awake'))}
+          ${fila('ECMO pre - VV', yn('ECMO pre - VV'))}
+          ${fila('ECMO pre - VA periférico', yn('ECMO pre - VA periférico'))}
+          ${fila('ECMO post - VV', yn('ECMO post - VV'))}
+          ${fila('ECMO post - VA central', yn('ECMO post - VA central'))}
+          ${fila('ECMO post - VA periférico', yn('ECMO post - VA periférico'))}
+          ${fila('Fecha ECMO pre', val('Fecha ECMO pre'))}
+          ${fila('Fecha ECMO post', val('Fecha ECMO post'))}
+          ${fila('Fecha retirada ECMO', val('Fecha retirada ECMO'))}
+          ${fila('Días ECMO total', val('Días ECMO total'))}
+          ${fila('Días ECMO pre', val('Días ECMO pre'))}
+          ${fila('Días ECMO post', val('Días ECMO post'))}
+          ${fila('Motivo ECMO', val('Motivo ECMO'))}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:6px">
+    <div class="seccion">
+      ${secTitulo('Complicaciones Postoperatorias','#784212')}
+      <table>
+        ${fila('Reintervención', yn('Reintervención quirúrgica'))}
+        ${fila('— Shock hemorrágico', yn('Reinterv. - Shock hemorrágico'))}
+        ${fila('— Taponamiento', yn('Reinterv. - Taponamiento'))}
+        ${fila('Miopatía', yn('Miopatía'))}
+        ${fila('Disfunción diafragmática', yn('Disfunción diafragmática'))}
+        ${fila('Gastroparesia', yn('Gastroparesia'))}
+        ${fila('IRA', yn('IRA'))}
+        ${fila('HDFVVC', yn('HDFVVC'))}
+        ${fila('Neumonía', yn('Neumonía'))}
+        ${fila('Traqueostomía', yn('Traqueostomía'))}
+        ${fila('Dehiscencia anastomosis', yn('Dehiscencia anastomosis'))}
+        ${fila('Prótesis', yn('Prótesis'))}
+        ${fila('Trombosis', yn('Trombosis'))}
+        ${fila('TEP', yn('TEP'))}
+        ${fila('Delirium', yn('Delirium'))}
+        ${fila('Shock séptico', yn('Shock séptico'))}
+        ${fila('Compl. abdominales', yn('Complicaciones abdominales'))}
+        ${fila('— Colecistitis', yn('Abd. - Colecistitis'))}
+        ${fila('— Íleo', yn('Abd. - Íleo intestinal'))}
+        ${fila('— Isquemia intestinal', yn('Abd. - Isquemia intestinal'))}
+        ${fila('— Perforación', yn('Abd. - Perforación intestinal'))}
+        ${fila('— Otros abdominales', val('Abd. - Otros abdominales'))}
+      </table>
+    </div>
+
+    <div>
+      <div class="seccion">
+        ${secTitulo('Rechazo e Hipersensibilización','#943126')}
+        <table>
+          ${fila('Rechazo', yn('Rechazo'))}
+          ${fila('Rechazo celular', yn('Rechazo celular'))}
+          ${fila('Grado rechazo celular', val('Grado rechazo celular'))}
+          ${fila('Tto rechazo celular', val('Tto rechazo celular'))}
+          ${fila('Rechazo humoral', yn('Rechazo humoral'))}
+          ${fila('Tto rechazo humoral', val('Tto rechazo humoral'))}
+          ${fila('Hipersensibilizado', yn('Hipersensibilizado'))}
+          ${fila('PRA (%)', val('PRA (%)'))}
+          ${fila('Tto inductor', val('Tto inductor'))}
+          ${fila('Tto desensibilización', val('Tto desensibilización'))}
+        </table>
+      </div>
+
+      <div class="seccion">
+        ${secTitulo('Alta UCI','#1B2631')}
+        <table>
+          ${fila('Alta UCI', val('Alta UCI'))}
+          ${fila('Motivo éxitus', val('Motivo éxitus (categoría)'))}
+          ${fila('Detalle éxitus', val('Motivo éxitus (detalle)'))}
+          ${fila('Otras incidencias', val('Otras incidencias'))}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:6px">
+    <div class="seccion">
+      ${secTitulo('Microbiología Donante','#6E2F8B')}
+      <table>
+        ${['MRSA','MSSA','Pseudomonas MR','Pseudomonas MS','Haemophilus','E. Coli','Klebsiella','Gripe A','Serratia','Proteus','Enterobacter','Aspergillus','Stenotrophomonas','Achromobacter','Eikenella','Citrobacter','Bordetella'].map(g => fila(g, yn('Donante - '+g))).join('')}
+      </table>
+    </div>
+    <div>
+      <div class="seccion">
+        ${secTitulo('Microbiología Receptor','#943126')}
+        <table>
+          ${['MRSA','MSSA','Pseudomonas MR','Pseudomonas MS','Haemophilus','Stenotrophomonas','Moraxella','Aspergillus','Acinetobacter','Strongyloides','Enterobacter','Proteus','Klebsiella','Scedosporium','Achromobacter','VRS','E. Coli'].map(g => fila(g, yn('Receptor - '+g))).join('')}
+        </table>
+      </div>
+      <div class="seccion" style="margin-top:6px">
+        ${secTitulo('Infecciones Post-Trasplante','#117A65')}
+        <table>
+          ${['Pseudomonas MR','Pseudomonas MS','Klebsiella','Aspergillus','S. aureus sensible','Haemophilus','MRSA','E. Coli','Achromobacter','Serratia','Stenotrophomonas','Enterobacter','E. faecium','Scedosporium'].map(g => fila(g, yn('Infec. - '+g))).join('')}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="noprint">
+    <button onclick="window.print()">🖨 Imprimir / Guardar PDF</button>
+    <button onclick="window.close()" style="background:#666">✕ Cerrar</button>
+  </div>
+  </body></html>`;
+
+  const win = window.open('','_blank','width=1000,height=800');
   win.document.write(html);
   win.document.close();
 }
@@ -2303,6 +2474,49 @@ function drawPieTx() {
     ctx.fillText(total, cx, cy);
   } catch(e) {}
 }
+
+// ─── SINCRONIZACIÓN AUTOMÁTICA AL ABRIR ──────────────────────────────────────
+// Cada vez que se abre el formulario actualiza desde Sheets en segundo plano
+(function() {
+  if (!sessionStorage.getItem('txp_auth')) return;
+  if (!SHEETS_URL) return;
+  setTimeout(async function() {
+    try {
+      const resp = await fetch(SHEETS_URL, { method: 'GET' });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (data.status !== 'ok' || !data.pacientes || !data.pacientes.length) return;
+      let cambios = 0;
+      data.pacientes.forEach(function(pSheet) {
+        const nhc  = String(pSheet['NHC'] || '').trim();
+        const nom  = String(pSheet['Nombre'] || '').trim();
+        const nPac = String(pSheet['Nº Paciente'] || '').trim();
+        if (!nom && !nhc) return;
+        let idx2 = -1;
+        if (nPac) idx2 = patients.findIndex(function(p){ return String(p['Nº Paciente']||'').trim()===nPac; });
+        if (idx2 < 0 && nhc) idx2 = patients.findIndex(function(p){ return String(p['NHC']||'').trim()===nhc; });
+        if (idx2 < 0 && nom) idx2 = patients.findIndex(function(p){ return String(p['Nombre']||'').trim()===nom; });
+        if (idx2 >= 0) {
+          const _id = patients[idx2]._id;
+          const antes = JSON.stringify(patients[idx2]);
+          const despues = JSON.stringify(Object.assign({}, pSheet, {_id}));
+          if (antes !== despues) { patients[idx2] = Object.assign({}, pSheet, {_id}); cambios++; }
+        } else {
+          pSheet._id = Date.now() + Math.random();
+          patients.push(pSheet);
+          cambios++;
+        }
+      });
+      if (cambios > 0) {
+        sortAndRenumber();
+        localStorage.setItem('txp_v3', JSON.stringify(patients));
+        renderPatList();
+        updateUI(patients[patients.length-1]||null);
+        showToast('✓ ' + cambios + ' paciente(s) actualizados desde Sheets', 'tok');
+      }
+    } catch(e) {}
+  }, 2000);
+})();
 
 // Cuando se abre el formulario con ?nhc=XXXX o ?pac=N carga ese paciente
 (function() {
