@@ -921,7 +921,7 @@ try { patients = JSON.parse(localStorage.getItem('txp_v3') || '[]'); } catch(e){
 // ← CONTRASEÑA DE ACCESO (cámbiala aquí cuando quieras)
 const ACCESS_PASSWORD = 'ValleD1';
 
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyhU_sRVx_ozPbXRgKZwRFusHqg4-eo6Lo5SVv0exQLAk13M2VS0exSKUMbBwWyzW2YCA/exec';
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwAdGaRH6o9Q-U8RhK-fp1xXPZfFGTKqhFqBhsZkno0xPfMwXg6dNA432g7i113p8ue3w/exec';
 
 // [FIX #2] Token de autenticación — debe coincidir con AUTH_TOKEN en Apps Script
 const AUTH_TOKEN = '5ba8564aadafba38905730e5e25603ac9f35f8d08c1e04a9f3b7e03b73ececad';
@@ -1389,6 +1389,7 @@ async function enviarListaConEmail() {
   try {
     const resp = await fetch(SHEETS_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         _action: 'send_list_email',
@@ -1424,6 +1425,7 @@ async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
     try {
       await fetch(SHEETS_URL, {
         method: 'POST',
+        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ordered)
       });
@@ -1457,6 +1459,7 @@ async function sincronizarTodos() {
 
     await fetch(SHEETS_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         _action: 'sync_all',
@@ -1550,6 +1553,7 @@ function savePatient() {
           });
           await fetch(SHEETS_URL, {
             method: 'POST',
+            mode: 'no-cors',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
               _action: 'sync_all',
@@ -1660,6 +1664,7 @@ async function delPat(i) {
         });
         await fetch(SHEETS_URL, {
           method: 'POST',
+          mode: 'no-cors',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify({
             _action: 'sync_all',
@@ -1671,6 +1676,7 @@ async function delPat(i) {
         // Sin pacientes: solo borrar
         await fetch(SHEETS_URL, {
           method: 'POST',
+          mode: 'no-cors',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ _action: 'clear_all', _token: AUTH_TOKEN })
         });
