@@ -1389,8 +1389,7 @@ async function enviarListaConEmail() {
   try {
     const resp = await fetch(SHEETS_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({
         _action: 'send_list_email',
         _token: AUTH_TOKEN,
@@ -1425,8 +1424,7 @@ async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
     try {
       await fetch(SHEETS_URL, {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(ordered)
       });
       return; // éxito
@@ -1459,8 +1457,7 @@ async function sincronizarTodos() {
 
     await fetch(SHEETS_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({
         _action: 'sync_all',
         _token: AUTH_TOKEN,
@@ -1553,8 +1550,7 @@ function savePatient() {
           });
           await fetch(SHEETS_URL, {
             method: 'POST',
-            mode: 'no-cors',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify({
               _action: 'sync_all',
               _token: AUTH_TOKEN,
@@ -1664,8 +1660,7 @@ async function delPat(i) {
         });
         await fetch(SHEETS_URL, {
           method: 'POST',
-          mode: 'no-cors',
-          headers: {'Content-Type':'application/json'},
+          headers: {'Content-Type':'text/plain;charset=utf-8'},
           body: JSON.stringify({
             _action: 'sync_all',
             _token: AUTH_TOKEN,
@@ -1676,8 +1671,7 @@ async function delPat(i) {
         // Sin pacientes: solo borrar
         await fetch(SHEETS_URL, {
           method: 'POST',
-          mode: 'no-cors',
-          headers: {'Content-Type':'application/json'},
+          headers: {'Content-Type':'text/plain;charset=utf-8'},
           body: JSON.stringify({ _action: 'clear_all', _token: AUTH_TOKEN })
         });
       }
