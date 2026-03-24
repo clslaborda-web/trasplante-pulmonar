@@ -2475,49 +2475,6 @@ function drawPieTx() {
   } catch(e) {}
 }
 
-// ─── SINCRONIZACIÓN AUTOMÁTICA AL ABRIR ──────────────────────────────────────
-// Cada vez que se abre el formulario actualiza desde Sheets en segundo plano
-(function() {
-  if (!sessionStorage.getItem('txp_auth')) return;
-  if (!SHEETS_URL) return;
-  setTimeout(async function() {
-    try {
-      const resp = await fetch(SHEETS_URL, { method: 'GET' });
-      if (!resp.ok) return;
-      const data = await resp.json();
-      if (data.status !== 'ok' || !data.pacientes || !data.pacientes.length) return;
-      let cambios = 0;
-      data.pacientes.forEach(function(pSheet) {
-        const nhc  = String(pSheet['NHC'] || '').trim();
-        const nom  = String(pSheet['Nombre'] || '').trim();
-        const nPac = String(pSheet['Nº Paciente'] || '').trim();
-        if (!nom && !nhc) return;
-        let idx2 = -1;
-        if (nPac) idx2 = patients.findIndex(function(p){ return String(p['Nº Paciente']||'').trim()===nPac; });
-        if (idx2 < 0 && nhc) idx2 = patients.findIndex(function(p){ return String(p['NHC']||'').trim()===nhc; });
-        if (idx2 < 0 && nom) idx2 = patients.findIndex(function(p){ return String(p['Nombre']||'').trim()===nom; });
-        if (idx2 >= 0) {
-          const _id = patients[idx2]._id;
-          const antes = JSON.stringify(patients[idx2]);
-          const despues = JSON.stringify(Object.assign({}, pSheet, {_id}));
-          if (antes !== despues) { patients[idx2] = Object.assign({}, pSheet, {_id}); cambios++; }
-        } else {
-          pSheet._id = Date.now() + Math.random();
-          patients.push(pSheet);
-          cambios++;
-        }
-      });
-      if (cambios > 0) {
-        sortAndRenumber();
-        localStorage.setItem('txp_v3', JSON.stringify(patients));
-        renderPatList();
-        updateUI(patients[patients.length-1]||null);
-        showToast('✓ ' + cambios + ' paciente(s) actualizados desde Sheets', 'tok');
-      }
-    } catch(e) {}
-  }, 2000);
-})();
-
 // Cuando se abre el formulario con ?nhc=XXXX o ?pac=N carga ese paciente
 (function() {
   try {
