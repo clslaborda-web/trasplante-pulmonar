@@ -1913,8 +1913,8 @@ function recalcECMO() {
   const total  = calcDias(inicio, fRet);
   // Pre: desde colocación pre hasta fecha de trasplante
   const pre    = calcDias(fPre, fTx);
-  // Post: desde colocación post hasta retirada
-  const post   = calcDias(fPost, fRet);
+  // Post: desde colocación post (o fecha Tx si no hay fecha post) hasta retirada
+  const post   = calcDias(fPost || fTx, fRet);
 
   document.getElementById('calc-ecmo-total').textContent = total !== null ? total : '—';
   document.getElementById('calc-ecmo-pre').textContent   = pre   !== null ? pre   : '—';
