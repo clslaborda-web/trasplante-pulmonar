@@ -1161,8 +1161,8 @@ function collectForm() {
   d['Días ECMO total'] = calcDias(inicioECMO, fEret);
   // Días ECMO pre: desde colocación pre hasta fecha de trasplante
   d['Días ECMO pre']   = calcDias(fEpre, g('FechaTx'));
-  // Días ECMO post: desde colocación post hasta retirada
-  d['Días ECMO post']  = calcDias(fEpost, fEret);
+  // Días ECMO post: desde colocación post (o fecha Tx si no hay fecha post) hasta retirada
+  d['Días ECMO post']  = calcDias(fEpost || g('FechaTx'), fEret);
   d['Motivo ECMO']              = gs('MotivoECMO');
 
   // ── UCI / Alta ──
