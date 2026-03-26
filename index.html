@@ -1298,7 +1298,7 @@ function editPat(i) {
   scb('ECMOpostVAp', p['ECMO post - VA periférico']);
   sv('FechaECMOpre', p['Fecha ECMO pre']); sv('FechaECMOpost', p['Fecha ECMO post']);
   sv('FechaECMOret', p['Fecha retirada ECMO']); sv('MotivoECMO', p['Motivo ECMO']);
-  recalcECMO();
+  setTimeout(recalcECMO, 50);
 
   // Banner de edición
   const bar = document.querySelector('.save-bar');
@@ -1547,13 +1547,14 @@ function savePatient() {
           await new Promise(r => setTimeout(r, 600));
           // 2. Reenviar todos — el ÚLTIMO lleva bandera de email
           // (cuando llega el último, todos ya están en Sheets → lista completa)
-          const lastIdx = patients.length - 1;
           for (let i = 0; i < patients.length; i++) {
             const p = patients[i];
             const payload = {};
             COLS_BD.forEach(col => { payload[col] = (p[col] !== undefined && p[col] !== null) ? p[col] : ''; });
             payload._action    = 'insert';
-            payload._sendEmail = (i === lastIdx) ? 'true' : 'false';
+            // Email se dispara en el ÚLTIMO insert — cuando todos ya están en Sheets
+            payload._sendEmail = (i === patients.length - 1) ? 'true' : 'false';
+            // Datos del paciente NUEVO (no del último) para el asunto del email
             payload._newNom    = patients.find(px => px._id === savedId)?.['Nombre'] || '';
             payload._newNHC    = patients.find(px => px._id === savedId)?.['NHC'] || '';
             payload._newFTx    = patients.find(px => px._id === savedId)?.['Fecha Trasplante'] || '';
