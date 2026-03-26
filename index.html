@@ -919,6 +919,7 @@ try { patients = JSON.parse(localStorage.getItem('txp_v3') || '[]'); } catch(e){
 
 // ← PON AQUÍ TU URL DE APPS SCRIPT (entre las comillas)
 // ← CONTRASEÑA DE ACCESO (cámbiala aquí cuando quieras)
+let isSyncing = false; // Evita sincronizaciones concurrentes
 const ACCESS_PASSWORD = 'ValleD1';
 
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwAdGaRH6o9Q-U8RhK-fp1xXPZfFGTKqhFqBhsZkno0xPfMwXg6dNA432g7i113p8ue3w/exec';
@@ -1391,7 +1392,7 @@ async function enviarListaConEmail() {
     const resp = await fetch(SHEETS_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({
         _action: 'send_list_email',
         _email: email,
@@ -1425,7 +1426,7 @@ async function sendToSheets(patientData, isUpdate = false, isDelete = false) {
       await fetch(SHEETS_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(ordered)
       });
       return; // éxito
@@ -1449,7 +1450,7 @@ async function sincronizarTodos() {
   try {
     await fetch(SHEETS_URL, {
       method: 'POST', mode: 'no-cors',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({_action:'clear_all'})
     });
     await new Promise(r => setTimeout(r, 1000));
@@ -1556,7 +1557,7 @@ function savePatient() {
           const saved = patients.find(px => px._id === savedId);
           await fetch(SHEETS_URL, {
             method: 'POST', mode: 'no-cors',
-            headers: {'Content-Type': 'application/json'},
+            headers: {'Content-Type': 'text/plain;charset=utf-8'},
             body: JSON.stringify({
               _action:    'sync_all',
               _pacientes: pacientes,
@@ -1667,7 +1668,7 @@ async function delPat(i) {
       });
       await fetch(SHEETS_URL, {
         method: 'POST', mode: 'no-cors',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'text/plain;charset=utf-8'},
         body: JSON.stringify({ _action: 'sync_all', _pacientes: pacientes, _sendEmail: 'false' })
       });
       showToast('✓ Sheets actualizado correctamente','tok');
