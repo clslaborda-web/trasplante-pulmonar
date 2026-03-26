@@ -466,7 +466,7 @@ function checkPassword() {
           <div class="fgroup">
             <label class="flbl">Días UCI pre-trasplante</label>
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:0.42rem 0.7rem;font-size:0.83rem;color:var(--accent);font-family:var(--mono)">
-              <span id="calc-uci-pre">—</span> <span style="font-size:0.7rem;color:var(--text3)">d (Tx − priorización)</span>
+              <span id="calc-uci-pre">—</span> <span style="font-size:0.7rem;color:var(--text3)">d (Tx − ingreso UCI)</span>
             </div>
           </div>
         </div>
@@ -1007,7 +1007,7 @@ function collectForm() {
   d['Días UCI']                   = calcDias(g('FechaIngresoUCI'), g('FechaAltaUCI'));
   d['Días de Trasplante']         = calcDias(g('FechaTx'), g('FechaAltaUCI'));
   d['Fecha priorización']         = gt('FechaPriorizacion');
-  d['Días UCI pre-trasplante']    = calcDias(g('FechaPriorizacion'), g('FechaTx'));
+  d['Días UCI pre-trasplante']    = calcDias(g('FechaIngresoUCI'), g('FechaTx'));
   d['Fecha inicio VM']            = gt('FechaInicioVM');
   d['Fecha retirada VM']          = gt('FechaRetiradaVM');
   d['Días VM']                    = calcDias(g('FechaInicioVM'), g('FechaRetiradaVM'));
@@ -1870,7 +1870,7 @@ function recalcDias() {
 
   const uci     = calcDias(fIUCI, fAUCI);
   const diasTx  = calcDias(fTx, fAUCI);
-  const uciPre  = calcDias(fPrior, fTx);
+  const uciPre  = calcDias(fIUCI, fTx);
   const vm      = calcDias(fIVM, fRVM);
 
   document.getElementById('calc-uci').textContent      = uci    !== null ? uci    : '—';
