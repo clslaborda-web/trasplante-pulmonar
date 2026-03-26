@@ -1489,11 +1489,19 @@ function setEstadoBtn(val) {
 }
 
 function sortAndRenumber() {
-  patients.sort((a, b) => {
-    const da = a['Fecha Trasplante'] ? new Date(a['Fecha Trasplante'].split('/').reverse().join('-')) : new Date(9999,0,1);
-    const db = b['Fecha Trasplante'] ? new Date(b['Fecha Trasplante'].split('/').reverse().join('-')) : new Date(9999,0,1);
-    return da - db;
-  });
+  // Parser robusto que maneja yyyy-MM-dd y dd/MM/yyyy
+  function parseFecha(f) {
+    if (!f) return new Date(9999, 0, 1);
+    var s = String(f).trim();
+    // Formato dd/MM/yyyy o dd-MM-yyyy
+    var m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (m) return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+    // Formato yyyy-MM-dd o yyyy/MM/dd
+    var m2 = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (m2) return new Date(parseInt(m2[1]), parseInt(m2[2])-1, parseInt(m2[3]));
+    return new Date(9999, 0, 1);
+  }
+  patients.sort((a, b) => parseFecha(a['Fecha Trasplante']) - parseFecha(b['Fecha Trasplante']));
   patients.forEach((p, i) => p['Nº Paciente'] = i + 1);
 }
 
@@ -1538,36 +1546,30 @@ function savePatient() {
       // El nuevo paciente lleva _sendEmail:true para que Apps Script mande el email
       setTimeout(async () => {
         try {
-          // 1. Borrar todo
+          isSyncing = true;
+          // Enviar TODOS los pacientes en una sola petición atómica
+          const pacientes = patients.map(p => {
+            const payload = {};
+            COLS_BD.forEach(col => { payload[col] = (p[col] !== undefined && p[col] !== null) ? p[col] : ''; });
+            return payload;
+          });
+          const saved = patients.find(px => px._id === savedId);
           await fetch(SHEETS_URL, {
             method: 'POST', mode: 'no-cors',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({_action: 'clear_all'})
+            body: JSON.stringify({
+              _action:    'sync_all',
+              _pacientes: pacientes,
+              _sendEmail: 'true',
+              _newNom:    saved?.['Nombre'] || '',
+              _newNHC:    saved?.['NHC'] || '',
+              _newFTx:    saved?.['Fecha Trasplante'] || '',
+              _newNPac:   saved?.['Nº Paciente'] || ''
+            })
           });
-          await new Promise(r => setTimeout(r, 600));
-          // 2. Reenviar todos — el ÚLTIMO lleva bandera de email
-          // (cuando llega el último, todos ya están en Sheets → lista completa)
-          for (let i = 0; i < patients.length; i++) {
-            const p = patients[i];
-            const payload = {};
-            COLS_BD.forEach(col => { payload[col] = (p[col] !== undefined && p[col] !== null) ? p[col] : ''; });
-            payload._action    = 'insert';
-            // Email se dispara en el ÚLTIMO insert — cuando todos ya están en Sheets
-            payload._sendEmail = (i === patients.length - 1) ? 'true' : 'false';
-            // Datos del paciente NUEVO (no del último) para el asunto del email
-            payload._newNom    = patients.find(px => px._id === savedId)?.['Nombre'] || '';
-            payload._newNHC    = patients.find(px => px._id === savedId)?.['NHC'] || '';
-            payload._newFTx    = patients.find(px => px._id === savedId)?.['Fecha Trasplante'] || '';
-            payload._newNPac   = patients.find(px => px._id === savedId)?.['Nº Paciente'] || '';
-            await fetch(SHEETS_URL, {
-              method: 'POST', mode: 'no-cors',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify(payload)
-            });
-            await new Promise(r => setTimeout(r, 350));
-          }
         } catch(e) { console.warn('Sync error:', e); }
-      }, 100);
+        finally { isSyncing = false; }
+      }, 100);;
     }
   }
 
@@ -1656,22 +1658,20 @@ async function delPat(i) {
   showToast('Paciente eliminado — actualizando Sheets…','tinf');
 
   // Si hay URL de Sheets: borrar + reenviar todos para que los números queden correctos
-  if (SHEETS_URL && patients.length > 0) {
+  if (SHEETS_URL) {
     try {
-      await fetch(SHEETS_URL, {
-        method:'POST', mode:'no-cors',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({_action:'clear_all'})
+      const pacientes = patients.map(p => {
+        const payload = {};
+        COLS_BD.forEach(col => { payload[col] = (p[col] !== undefined && p[col] !== null) ? p[col] : ''; });
+        return payload;
       });
-      await new Promise(r => setTimeout(r, 800));
-      for (let p of patients) {
-        await sendToSheets(p, false, false);
-        await new Promise(r => setTimeout(r, 400));
-      }
+      await fetch(SHEETS_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ _action: 'sync_all', _pacientes: pacientes, _sendEmail: 'false' })
+      });
       showToast('✓ Sheets actualizado correctamente','tok');
-    } catch(e) {
-      showToast('⚠ Error al actualizar Sheets','terr');
-    }
+    } catch(e) { showToast('⚠ Error al actualizar Sheets','terr'); }
   } else if (SHEETS_URL) {
     // Si no quedan pacientes, solo borramos
     sendToSheets(deleted, false, true);
