@@ -1214,7 +1214,7 @@ function editPat(i) {
   sv('FechaIngresoUCI', p['Fecha ingreso UCI']); sv('FechaTx', p['Fecha Trasplante']);
   sv('FechaAltaUCI', p['Fecha alta UCI']); sv('FechaPriorizacion', p['Fecha priorización']);
   sv('FechaInicioVM', p['Fecha inicio VM']); sv('FechaRetiradaVM', p['Fecha retirada VM']);
-  sv('AltaUCI', p['Alta UCI']); sv('MotivoExitusSel', p['Motivo éxitus (categoría)']); toggleMotivoExitus(); sv('Motivoexitus', p['Motivo éxitus (detalle)']); sv('otras', p['Otras incidencias']);
+  sv('AltaUCI', p['Alta UCI']); sv('MotivoExitusSel', p['Motivo éxitus (categoría)']); sv('Motivoexitus', p['Motivo éxitus (detalle)']); sv('otras', p['Otras incidencias']);
   recalcDias();
 
   // Microbiología donante
@@ -1709,7 +1709,7 @@ function clearForm() {
   document.getElementById('calc-ecmo-post').textContent='—';
   setEstadoBtn('Incompleto');
   document.getElementById('grp-Reinterv').style.display='none';
-  document.getElementById('grp-MotivoExitusOtro').style.display='none';
+  // grp-MotivoExitusOtro eliminado
   document.getElementById('grp-CompAbd').style.display='none';
   // Reset Rechazo checkbox in S5
   const ciR = document.getElementById('ci-Rechazo');
@@ -1988,8 +1988,9 @@ function syncRechazoCheckbox() {
 
 // ─── MOTIVO ÉXITUS ────────────────────────────────────────────────────────────
 function toggleMotivoExitus() {
+  // Campo detalle siempre visible - función mantenida por compatibilidad
   const val = document.getElementById('MotivoExitusSel')?.value;
-  const el  = document.getElementById('grp-MotivoExitusOtro');
+  const el  = null; // grp-MotivoExitusOtro eliminado
   if (el) el.style.display = val === 'Otro' ? '' : 'none';
   if (val !== 'Otro') document.getElementById('Motivoexitus').value = '';
 }
