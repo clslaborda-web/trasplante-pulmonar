@@ -487,23 +487,20 @@ function checkPassword() {
           <div class="fgroup"><label class="flbl">Alta UCI</label>
             <select id="AltaUCI"><option value="">—</option><option value="Vivo">Vivo</option><option value="Fallecido">Fallecido</option></select>
           </div>
-          <div class="fgroup"><label class="flbl">Motivo éxitus</label>
-            <select id="MotivoExitusSel" onchange="toggleMotivoExitus()">
+          <div class="fgroup"><label class="flbl">Motivo éxitus (categoría)</label>
+            <select id="MotivoExitusSel">
               <option value="">—</option>
-              <option value="AVC isquémico">AVC isquémico</option>
-              <option value="Isquemia intestinal">Isquemia intestinal</option>
-              <option value="FMO">FMO</option>
-              <option value="Infección fúngica invasiva">Infección fúngica invasiva</option>
-              <option value="Shock hemorrágico">Shock hemorrágico</option>
-              <option value="DPI refractario">DPI refractario</option>
-              <option value="Fallo cardíaco">Fallo cardíaco</option>
-              <option value="Sepsis">Sepsis</option>
-              <option value="TEP masivo">TEP masivo</option>
-              <option value="Otro">Otro</option>
+              <option value="Neurológico">Neurológico</option>
+              <option value="Infeccioso">Infeccioso</option>
+              <option value="Cardiovascular">Cardiovascular</option>
+              <option value="Respiratorio">Respiratorio</option>
+              <option value="Fallo multiorgánico">Fallo multiorgánico</option>
+              <option value="Abdominal">Abdominal</option>
+              <option value="Otras causas">Otras causas</option>
             </select>
           </div>
-          <div class="fgroup" id="grp-MotivoExitusOtro" style="display:none"><label class="flbl">Especificar</label>
-            <input type="text" id="Motivoexitus" placeholder="descripción">
+          <div class="fgroup"><label class="flbl">Motivo éxitus (detalle)</label>
+            <input type="text" id="Motivoexitus" placeholder="diagnóstico específico">
           </div>
           <div class="fgroup sp2"><label class="flbl">Otras incidencias</label><input type="text" id="otras" placeholder="observaciones adicionales"></div>
         </div>
@@ -1169,7 +1166,7 @@ function collectForm() {
   // ── UCI / Alta ──
   d['Alta UCI']          = gs('AltaUCI');
   d['Motivo éxitus (categoría)'] = gs('MotivoExitusSel');
-  d['Motivo éxitus (detalle)']    = gs('MotivoExitusSel') === 'Otro' ? gt('Motivoexitus') : null;
+  d['Motivo éxitus (detalle)']    = gt('Motivoexitus');
   d['Otras incidencias'] = gt('otras');
 
   return d;
