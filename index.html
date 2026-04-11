@@ -201,12 +201,14 @@ input::placeholder { color: var(--text3); }
 .dpi-result.g1 { background:rgba(255,176,32,0.12); border-color:var(--amber); color:var(--amber); }
 .dpi-result.g2 { background:rgba(255,120,0,0.12); border-color:#FF7800; color:#FF9040; }
 .dpi-result.g3 { background:var(--red-dim); border-color:var(--red); color:var(--red); }
+.dpi-result.g9 { background:rgba(255,140,0,0.12); border-color:#FF8C00; color:#FFA040; }
 .dpi-badge { display:inline-block; padding:0.1rem 0.45rem; border-radius:4px; font-size:0.73rem; font-weight:700; font-family:var(--mono); }
 .dpi-badge.g0 { background:rgba(0,229,160,0.15); color:var(--green); }
 .dpi-badge.g0t { background:rgba(100,180,255,0.15); color:#6BB8FF; }
 .dpi-badge.g1 { background:rgba(255,176,32,0.15); color:var(--amber); }
 .dpi-badge.g2 { background:rgba(255,120,0,0.15); color:#FF9040; }
 .dpi-badge.g3 { background:var(--red-dim); color:var(--red); }
+.dpi-badge.g9 { background:rgba(255,140,0,0.15); color:#FF8C00; }
 .dpi-badge.gna { background:rgba(150,150,150,0.15); color:#909090; }
 .dpi-result.g0t { background:rgba(100,180,255,0.12); border-color:#6BB8FF; color:#6BB8FF; }
 .dpi-result.gna { background:rgba(150,150,150,0.12); border-color:#909090; color:#909090; }
@@ -223,12 +225,14 @@ input::placeholder { color: var(--text3); }
 .dpi-sum-card.g1 { border-color:var(--amber); background:rgba(255,176,32,0.08); }
 .dpi-sum-card.g2 { border-color:#FF7800; background:rgba(255,120,0,0.08); }
 .dpi-sum-card.g3 { border-color:var(--red); background:var(--red-dim); }
+.dpi-sum-card.g9 { border-color:#FF8C00; background:rgba(255,140,0,0.08); }
 .dsum-t { font-family:var(--mono); font-size:0.65rem; color:var(--text3); }
 .dsum-g { font-family:var(--mono); font-size:1rem; font-weight:700; color:var(--text3); }
 .dpi-sum-card.g0 .dsum-g { color:var(--green); }
 .dpi-sum-card.g1 .dsum-g { color:var(--amber); }
 .dpi-sum-card.g2 .dsum-g { color:#FF9040; }
 .dpi-sum-card.g3 .dsum-g { color:var(--red); }
+.dpi-sum-card.g9 .dsum-g { color:#FF8C00; }
 #dpi-tabla td { vertical-align:middle; padding:0.5rem 0.6rem; }
 </style>
 </head>
@@ -579,17 +583,17 @@ function checkPassword() {
         <!-- Leyenda ISHLT 2016 desplegable -->
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:1rem;overflow:hidden">
           <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.dpi-arr').style.transform=this.nextElementSibling.style.display==='none'?'rotate(-90deg)':'rotate(0deg)'" style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 1rem;cursor:pointer;user-select:none">
-            <span style="font-family:var(--mono);font-size:0.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em">Criterios ISHLT 2016</span>
+            <span style="font-family:var(--mono);font-size:0.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em">Criterios ISHLT 2016 + Actualización 2025-2026</span>
             <span class="dpi-arr" style="color:var(--text3);font-size:0.75rem;transition:transform 0.2s">▼</span>
           </div>
           <div style="display:none;padding:0 1rem 0.75rem 1rem;font-size:0.78rem;color:var(--text2)">
             <div style="display:flex;flex-direction:column;gap:0.3rem">
-              <div><span class="dpi-badge g0">Grado 0</span> &nbsp;sin infiltrados (cualquier PaFI)</div>
+              <div><span class="dpi-badge g0">Grado 0</span> &nbsp;sin infiltrados (cualquier PaFI, incluye ECMO sin infiltrados)</div>
               <div><span class="dpi-badge g0t">Grado 0T</span> &nbsp;con infiltrados + PaFI &gt;300 en contexto especial <span style="color:var(--text3);font-size:0.72rem">(retrasplante · ECMO preoperatorio · HAP grave)</span></div>
               <div><span class="dpi-badge g1">Grado 1</span> &nbsp;con infiltrados + PaFI &gt;300</div>
               <div><span class="dpi-badge g2">Grado 2</span> &nbsp;con infiltrados + PaFI 200–300</div>
-              <div><span class="dpi-badge g3">Grado 3</span> &nbsp;PaFI &lt;200 &nbsp;<em>o</em>&nbsp; ECMO post con infiltrados</div>
-              <div><span class="dpi-badge gna">Inclasificable</span> &nbsp;ECMO post sin infiltrados</div>
+              <div><span class="dpi-badge g3">Grado 3</span> &nbsp;PaFI &lt;200 &nbsp;<em>o</em>&nbsp; ECMO respiratorio + infiltrados</div>
+              <div><span class="dpi-badge g9">Ungradable</span> &nbsp;ECMO NO respiratorio + infiltrados <span style="color:var(--text3);font-size:0.72rem">(ISHLT 2025-2026)</span></div>
             </div>
             <div style="margin-top:0.55rem;padding-top:0.45rem;border-top:1px solid var(--border);font-size:0.73rem;color:var(--text3)">⚠ iNO <strong style="color:var(--text2)">NO cambia el grado</strong> — se clasifica siempre por PaFI. &nbsp;|&nbsp; SaFI = SaO₂/FiO₂ (alternativo si no hay gasometría) &nbsp;|&nbsp; <strong style="color:var(--amber)">OAF (oxígeno alto flujo) equivale a VM</strong> para el cálculo de PaFI según ISHLT 2016</div>
             <div style="margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid var(--border);display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
@@ -608,6 +612,7 @@ function checkPassword() {
               <th>PaFI (mmHg)</th>
               <th>SaFI</th>
               <th>ECMO post</th>
+              <th>Indicación ECMO</th>
               <th>NO inhalado</th>
               <th>Decúbito prono</th>
               <th>Contexto especial (0T)</th>
@@ -622,6 +627,7 @@ function checkPassword() {
               <td><input type="number" id="PaFI0" placeholder="mmHg" min="0" max="600" style="width:100px" oninput="calcDPI('0')"></td>
               <td><input type="number" id="SaFI0" placeholder="ratio" min="0" max="2" step="0.01" style="width:80px" oninput="calcDPI('0')"></td>
               <td><label class="dpi-toggle" id="ecx0-lbl"><input type="checkbox" id="ecx0" onchange="calcDPI('0')"><span class="dtgl">No</span></label></td>
+              <td><select id="indECMO0" onchange="calcDPI('0')" style="width:95px;font-size:0.8rem;padding:3px"><option value="">—</option><option value="Resp.">Resp.</option><option value="NO Resp.">NO Resp.</option></select></td>
               <td><label class="dpi-toggle" id="noi0-lbl"><input type="checkbox" id="NOi0cb" onchange="calcDPI('0')"><span class="dtgl">No</span></label></td>
               <td><label class="dpi-toggle" id="prono0-lbl"><input type="checkbox" id="prono0"><span class="dtgl">No</span></label></td>
               <td><label class="dpi-toggle" id="ctx0-lbl"><input type="checkbox" id="ctx0" onchange="calcDPI('0')"><span class="dtgl">No</span></label></td>
@@ -634,6 +640,7 @@ function checkPassword() {
               <td><input type="number" id="PaFI24" placeholder="mmHg" min="0" max="600" style="width:100px" oninput="calcDPI('24')"></td>
               <td><input type="number" id="SaFI24" placeholder="ratio" min="0" max="2" step="0.01" style="width:80px" oninput="calcDPI('24')"></td>
               <td><label class="dpi-toggle" id="ecx24-lbl"><input type="checkbox" id="ecx24" onchange="calcDPI('24')"><span class="dtgl">No</span></label></td>
+              <td><select id="indECMO24" onchange="calcDPI('24')" style="width:95px;font-size:0.8rem;padding:3px"><option value="">—</option><option value="Resp.">Resp.</option><option value="NO Resp.">NO Resp.</option></select></td>
               <td><label class="dpi-toggle" id="noi24-lbl"><input type="checkbox" id="NOi24cb" onchange="calcDPI('24')"><span class="dtgl">No</span></label></td>
               <td><label class="dpi-toggle" id="prono24-lbl"><input type="checkbox" id="prono24"><span class="dtgl">No</span></label></td>
               <td><label class="dpi-toggle" id="ctx24-lbl"><input type="checkbox" id="ctx24" onchange="calcDPI('24')"><span class="dtgl">No</span></label></td>
@@ -646,6 +653,7 @@ function checkPassword() {
               <td><input type="number" id="PaFI48" placeholder="mmHg" min="0" max="600" style="width:100px" oninput="calcDPI('48')"></td>
               <td><input type="number" id="SaFI48" placeholder="ratio" min="0" max="2" step="0.01" style="width:80px" oninput="calcDPI('48')"></td>
               <td><label class="dpi-toggle" id="ecx48-lbl"><input type="checkbox" id="ecx48" onchange="calcDPI('48')"><span class="dtgl">No</span></label></td>
+              <td><select id="indECMO48" onchange="calcDPI('48')" style="width:95px;font-size:0.8rem;padding:3px"><option value="">—</option><option value="Resp.">Resp.</option><option value="NO Resp.">NO Resp.</option></select></td>
               <td><label class="dpi-toggle" id="noi48-lbl"><input type="checkbox" id="NOi48cb" onchange="calcDPI('48')"><span class="dtgl">No</span></label></td>
               <td><label class="dpi-toggle" id="prono48-lbl"><input type="checkbox" id="prono48"><span class="dtgl">No</span></label></td>
               <td><label class="dpi-toggle" id="ctx48-lbl"><input type="checkbox" id="ctx48" onchange="calcDPI('48')"><span class="dtgl">No</span></label></td>
@@ -658,6 +666,7 @@ function checkPassword() {
               <td><input type="number" id="PaFI72" placeholder="mmHg" min="0" max="600" style="width:100px" oninput="calcDPI('72')"></td>
               <td><input type="number" id="SaFI72" placeholder="ratio" min="0" max="2" step="0.01" style="width:80px" oninput="calcDPI('72')"></td>
               <td><label class="dpi-toggle" id="ecx72-lbl"><input type="checkbox" id="ecx72" onchange="calcDPI('72')"><span class="dtgl">No</span></label></td>
+              <td><select id="indECMO72" onchange="calcDPI('72')" style="width:95px;font-size:0.8rem;padding:3px"><option value="">—</option><option value="Resp.">Resp.</option><option value="NO Resp.">NO Resp.</option></select></td>
               <td><label class="dpi-toggle" id="noi72-lbl"><input type="checkbox" id="NOi72cb" onchange="calcDPI('72')"><span class="dtgl">No</span></label></td>
               <td><label class="dpi-toggle" id="prono72-lbl"><input type="checkbox" id="prono72"><span class="dtgl">No</span></label></td>
               <td><label class="dpi-toggle" id="ctx72-lbl"><input type="checkbox" id="ctx72" onchange="calcDPI('72')"><span class="dtgl">No</span></label></td>
@@ -944,11 +953,11 @@ const COLS_BD = [
   'Receptor - Aspergillus','Receptor - Acinetobacter','Receptor - Strongyloides',
   'Receptor - Enterobacter','Receptor - Proteus','Receptor - Klebsiella',
   'Receptor - Scedosporium','Receptor - Achromobacter','Receptor - VRS','Receptor - E. Coli',
-  // DPI (ISHLT 2016) — 6 campos × 4 timepoints
-  'DPI 0h','PaFI 0h (mmHg)','SaFI 0h','Infiltrados 0h','ECMO post 0h','NO inhalado 0h','Prono 0h',
-  'DPI 24h','PaFI 24h (mmHg)','SaFI 24h','Infiltrados 24h','ECMO post 24h','NO inhalado 24h','Prono 24h',
-  'DPI 48h','PaFI 48h (mmHg)','SaFI 48h','Infiltrados 48h','ECMO post 48h','NO inhalado 48h','Prono 48h',
-  'DPI 72h','PaFI 72h (mmHg)','SaFI 72h','Infiltrados 72h','ECMO post 72h','NO inhalado 72h','Prono 72h',
+  // DPI (ISHLT 2025-2026) — 8 campos × 4 timepoints (añadida columna "Indicación ECMO")
+  'DPI 0h','PaFI 0h (mmHg)','SaFI 0h','Infiltrados 0h','ECMO post 0h','Indicación ECMO 0h','NO inhalado 0h','Prono 0h',
+  'DPI 24h','PaFI 24h (mmHg)','SaFI 24h','Infiltrados 24h','ECMO post 24h','Indicación ECMO 24h','NO inhalado 24h','Prono 24h',
+  'DPI 48h','PaFI 48h (mmHg)','SaFI 48h','Infiltrados 48h','ECMO post 48h','Indicación ECMO 48h','NO inhalado 48h','Prono 48h',
+  'DPI 72h','PaFI 72h (mmHg)','SaFI 72h','Infiltrados 72h','ECMO post 72h','Indicación ECMO 72h','NO inhalado 72h','Prono 72h',
   // Complicaciones
   'Reintervención quirúrgica','Reinterv. - Shock hemorrágico','Reinterv. - Taponamiento',
   'Miopatía','Disfunción diafragmática',
@@ -1077,6 +1086,7 @@ function collectForm() {
     d[`SaFI ${T}`]           = gn('SaFI'+t);
     d[`Infiltrados ${T}`]    = document.getElementById('inf'+t)?.checked ? 'Sí' : 'No';
     d[`ECMO post ${T}`]      = document.getElementById('ecx'+t)?.checked ? 'Sí' : 'No';
+    d[`Indicación ECMO ${T}`] = gs('indECMO'+t);
     d[`NO inhalado ${T}`]    = document.getElementById('NOi'+t)?.value || 'No';
     d[`Prono ${T}`]          = document.getElementById('prono'+t)?.checked ? 'Sí' : 'No';
   });
@@ -1251,6 +1261,7 @@ function editPat(i) {
     sv('PaFI'+t, p[`PaFI ${T} (mmHg)`]); sv('SaFI'+t, p[`SaFI ${T}`]);
     sc('inf'+t, p[`Infiltrados ${T}`]==='Sí');
     sc('ecx'+t, p[`ECMO post ${T}`]==='Sí');
+    sv('indECMO'+t, p[`Indicación ECMO ${T}`]);
     sc('NOi'+t+'cb', p[`NO inhalado ${T}`]==='Sí');
     sc('prono'+t, p[`Prono ${T}`]==='Sí');
     calcDPI(t);
@@ -1793,10 +1804,14 @@ function calcDPI(t) {
   const sumEl = document.getElementById('dsum'+t);
   const sumG  = document.getElementById('dsum'+t+'-g');
 
-  // ── Algoritmo ISHLT 2016 ──────────────────────────────────────────
-  // 1. ECMO post + infiltrados → Grado 3 (independiente de PaFI)
-  // 2. ECMO post + sin infiltrados → Inclasificable
-  // 3. Sin ECMO:
+  // ──── NUEVO 2025-2026: Leer indicación ECMO del timepoint específico ────
+  const indicacionECMO = document.getElementById('indECMO'+t)?.value || '';
+
+  // ── Algoritmo ISHLT 2025-2026 ACTUALIZADO ──────────────────────────
+  // 1. ECMO post + infiltrados + indicación RESPIRATORIA → Grado 3
+  // 2. ECMO post + infiltrados + indicación NO RESPIRATORIA → UNGRADABLE (Grado 9)
+  // 3. ECMO post + SIN infiltrados → Grado 0 (independientemente de la indicación)
+  // 4. Sin ECMO:
   //    a. Sin infiltrados → Grado 0 (cualquier PaFI o sin PaFI)
   //    b. Con infiltrados + PaFI >300 + contexto especial → Grado 0T
   //    c. Con infiltrados + PaFI >300 → Grado 1
@@ -1808,9 +1823,14 @@ function calcDPI(t) {
 
   if (ecx) {
     if (inf) {
-      label = 'Grado 3'; cls = 'g3'; num = '3';   // ECMO + infiltrados → G3
+      // ──── NUEVO ISHLT 2025-2026: Distinguir indicación ECMO ────
+      if (indicacionECMO === 'NO Resp.') {
+        label = 'Ungradable'; cls = 'g9'; num = '9';  // ECMO NO respiratorio + infiltrados → UNGRADABLE
+      } else {
+        label = 'Grado 3'; cls = 'g3'; num = '3';   // ECMO respiratorio + infiltrados → G3
+      }
     } else {
-      label = 'Inclasificable'; cls = 'gna'; num = 'NC';  // ECMO sin infiltrados
+      label = 'Grado 0'; cls = 'g0'; num = '0';  // ECMO sin infiltrados → Grado 0 (sea cual sea la indicación)
     }
   } else if (!inf) {
     // Sin infiltrados → Grado 0 siempre
@@ -1834,16 +1854,16 @@ function calcDPI(t) {
 
   // Actualizar UI
   if (resEl) { resEl.textContent = label; resEl.className = 'dpi-result' + (cls ? ' '+cls : ''); }
-  if (hidEl) hidEl.value = (num && label !== '—') ? (num === 'NC' ? 'Inclasificable' : 'Grado '+num) : '';
+  if (hidEl) hidEl.value = (num && label !== '—') ? (num === 'NC' ? 'Inclasificable' : num === '9' ? 'Ungradable' : 'Grado '+num) : '';
   if (sumEl) { sumEl.className = 'dpi-sum-card' + (cls ? ' '+cls : ''); }
   if (sumG)  { sumG.textContent = label !== '—' ? label.replace('Grado ','G') : '—'; }
 
   // Highlight fila
   const row = document.querySelector(`#dpi-tabla tr[data-t="${t}"]`);
   if (row) {
-    row.style.background = cls==='g3'?'rgba(255,75,110,0.06)':cls==='g2'?'rgba(255,120,0,0.05)':
-                           cls==='g1'?'rgba(255,176,32,0.05)':cls==='g0'?'rgba(0,229,160,0.05)':
-                           cls==='g0t'?'rgba(100,180,255,0.05)':'';
+    row.style.background = cls==='g3'?'rgba(255,75,110,0.06)':cls==='g9'?'rgba(255,140,0,0.06)':
+                           cls==='g2'?'rgba(255,120,0,0.05)':cls==='g1'?'rgba(255,176,32,0.05)':
+                           cls==='g0'?'rgba(0,229,160,0.05)':cls==='g0t'?'rgba(100,180,255,0.05)':'';
   }
 
   // Guardar SaFI en collectForm via data attribute (accedido en collectForm)
